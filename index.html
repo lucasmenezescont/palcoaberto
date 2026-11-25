@@ -807,7 +807,7 @@
     // =========================================================================
     // CONFIGURAÇÃO DO GOOGLE DRIVE (COLE SEU CLIENT ID AQUI QUANDO GERAR)
     // =========================================================================
-    const GOOGLE_CLIENT_ID = 'COLE_SEU_CLIENT_ID_AQUI';
+    const GOOGLE_CLIENT_ID = '1087904594089-457mjahaks00v8ufd404ss1k4psbsbpm.apps.googleusercontent.com';
     const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
     const CLOUD_FOLDER_NAME = 'Palco Aberto';
     const CLOUD_BACKUP_FILENAME = 'palco-aberto-cloud.json';
@@ -870,7 +870,7 @@
     // INTEGRAÇÃO GOOGLE DRIVE (OAUTH 2.0 + DRIVE REST API v3 appDataFolder)
     // =========================================================================
     function getActiveGoogleClientId() {
-      if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'COLE_SEU_CLIENT_ID_AQUI') {
+      if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== '1087904594089-457mjahaks00v8ufd404ss1k4psbsbpm.apps.googleusercontent.com') {
         return GOOGLE_CLIENT_ID.trim();
       }
       return (localStorage.getItem(CLIENT_ID_STORAGE_KEY) || '').trim();
