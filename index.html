@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0B0B0C" id="meta-theme-color" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Palco Aberto</title>
+
+  <!-- Configuração PWA (Manifest, Tema e Ícone iOS) -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0B0B0C" id="meta-theme-color">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="./icon-192.png">
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -2307,6 +2311,20 @@ Pro samba que você me convidou?`,
         showToast('Erro ao iniciar banco de dados local.', 'error');
       }
     })();
+  </script>
+
+  <!-- Registro do Service Worker para modo 100% offline -->
+  <script>
+    if (
+      'serviceWorker' in navigator &&
+      (window.location.protocol === 'https:' || window.location.protocol === 'http:')
+    ) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Palco Aberto pronto para uso offline.'))
+          .catch((err) => console.warn('Service Worker indisponível neste ambiente:', err));
+      });
+    }
   </script>
 </body>
 </html>
