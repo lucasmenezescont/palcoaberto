@@ -919,6 +919,15 @@
           headerAvatar.classList.remove('hidden');
           headerIcon.classList.add('hidden');
         }
+        headerLabel.textContent = (state.cloud.user.given_name || state.cloud.user.name || 'Nuvem').split(' ')[0];
+      } else {
+        disconnectedView.classList.remove('hidden');
+        connectedView.classList.add('hidden');
+        headerAvatar.classList.add('hidden');
+        headerIcon.classList.remove('hidden');
+        headerLabel.textContent = 'Nuvem';
+      }
+
       // Estado de carregamento dos botões e link da pasta visível
       document.getElementById('btn-cloud-upload').disabled = state.cloud.busy;
       document.getElementById('btn-cloud-download').disabled = state.cloud.busy || !state.cloud.remoteFile;
