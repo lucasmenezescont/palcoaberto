@@ -1,4 +1,4 @@
-const CACHE_NAME = 'palco-aberto-v1';
+const CACHE_NAME = 'palco-aberto-v2';
 
 // Arquivos essenciais do próprio repositório
 const CORE_ASSETS = [
