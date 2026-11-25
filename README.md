@@ -10,28 +10,43 @@ O **Palco Aberto** nasceu para resolver uma dor comum de músicos de bar e event
 
 ## ✨ O que já funciona
 
-* **Banco de Dados Local (`IndexedDB`):** todas as suas cifras, PDFs e setlists ficam salvos diretamente no seu dispositivo, sem necessidade de cadastro ou servidor.
+* **PWA Instalável e 100% Offline:** pode ser instalado na tela inicial do celular ou tablet (Android, iOS e Desktop) em tela cheia e abre normalmente mesmo em Modo Avião.
+* **Banco de Dados Local (`IndexedDB`):** todas as suas cifras, PDFs e setlists ficam salvos diretamente no seu dispositivo, sem precisar de conta para usar.
+* **Sincronização com Google Drive *(Beta)*:** conecte sua própria conta Google para sincronizar repertório, PDFs e setlists entre computador, celular e tablet. O app cria uma pasta visível **`Palco Aberto`** no seu Drive e só acessa os arquivos criados por ele mesmo (`drive.file`).
 * **Importação Híbrida:**
-  * **Texto (Copia e Cola):** cola a cifra, o sistema identifica os acordes automaticamente e libera **transposição de tom em tempo real** (`-` / `+`).
-  * **PDF Contínuo:** importa seus arquivos `.pdf` já baixados e renderiza todas as páginas emendadas em uma única coluna vertical, com opção de **Modo Noturno**.
-* **Organização por Setlists:** monte listas personalizadas para cada show sem duplicar arquivos.
+  * **Texto (Smart Paste):** cole a cifra, o sistema identifica os acordes automaticamente e libera **transposição de tom em tempo real** (`Tom -` / `Tom +`).
+  * **PDF Contínuo:** importe seus arquivos `.pdf` já baixados e leia todas as páginas emendadas em uma única coluna vertical, com opção de **Modo Noturno**.
+* **Organização por Setlists:** monte listas personalizadas para cada show sem duplicar arquivos e navegue entre a música anterior e a próxima com um toque.
 * **Tela de Leitura Limpa (*Abrir Cifra*):**
-  * **Rolagem automática suave** com controle de velocidade salvo individualmente para cada música.
-  * **Screen Wake Lock:** impede que a tela do celular ou tablet apague no meio da música.
-  * **Suporte a Pedais Bluetooth:** controle a rolagem e a pausa usando teclas de atalho (`Espaço`, `PageUp`, `PageDown`, setas).
-* **Visual Personalizável:** tema padrão minimalista em Preto & Branco, com opções de *OLED Puro*, *Noturno Suave*, *Dia/Claro* e escolha livre da **cor dos acordes**.
-* **Backup Portátil:** exporte e restaure todo o seu repertório (incluindo os PDFs) em um único arquivo `.json`.
+  * **Rolagem automática suave** (`0.5x` a `10.0x`) com velocidade e tamanho da fonte salvos individualmente por música.
+  * **Screen Wake Lock:** impede que a tela do aparelho apague no meio da música.
+  * **Suporte a Pedais Bluetooth:** controle a rolagem e a pausa usando atalhos (`Espaço`, `PageUp`, `PageDown`, setas).
+* **Visual Personalizável:** tema padrão minimalista em Preto & Branco, com opções de *OLED Puro*, *Noturno Suave*, *Dia / Claro* e escolha livre da **cor dos acordes**.
+* **Backup Local Portátil:** exporte e restaure todo o seu repertório (incluindo os PDFs) em um único arquivo `.json`.
 
 ---
 
-## 🗺️ Roadmap (Próximos Passos)
+## 🧪 Acesso Beta à Sincronização (Google Drive)
 
-O projeto está em desenvolvimento ativo. Estas são as próximas prioridades:
+O aplicativo funciona **100% grátis e sem login** usando o armazenamento offline do seu aparelho.
 
-- [ ] **PWA 100% Offline:** adicionar `manifest.json` e `Service Worker` para instalação na tela inicial (Android/iOS) e abertura sem internet.
-- [ ] **Sincronização com Google Drive:** permitir que cada músico conecte sua própria conta do Google para sincronizar o repertório entre computador e tablet (*custo zero de servidor*).
+A integração com o **Google Drive** está atualmente em **fase de testes (Beta)**. Enquanto o app não passa pela verificação pública do Google, apenas e-mails autorizados manualmente conseguem fazer login na nuvem.
+
+**Quer testar a sincronização com o Google Drive?**
+1. Abra uma [Issue](https://github.com/lucasmenezescont/palcoaberto/issues) solicitando acesso ao Beta (ou envie seu e-mail Gmail diretamente para o mantenedor).
+2. Assim que seu e-mail for adicionado à lista de testadores, basta clicar em **Nuvem > Entrar com Google** no app.
+3. No primeiro login, caso o Google exiba o aviso de app em teste, clique em **Avançado > Acessar lucasmenezescont.github.io**.
+
+---
+
+## 🗺️ Roadmap
+
+- [x] **PWA 100% Offline:** `manifest.json` e `Service Worker` para instalação na tela inicial e uso sem internet.
+- [x] **Sincronização com Google Drive (Beta):** backup e restauração transparentes na pasta visível `Meu Drive / Palco Aberto` (*custo zero de servidor*).
+- [ ] **Verificação pública no Google Cloud:** liberar o login com Google Drive para qualquer usuário sem aprovação manual de e-mail.
 - [ ] **Extrator Inteligente de PDF:** converter PDFs de cifras em texto estruturado mantendo o alinhamento original dos acordes.
-- [ ] **Reordenação de Setlists:** arrastar e soltar (*drag and drop*) para mudar a ordem das músicas rapidamente.
+- [ ] **Reordenação por Arrastar e Soltar:** *drag and drop* para reorganizar músicas nos setlists rapidamente.
+- [ ] **Identidade Visual PWA:** novo ícone oficial e capturas de tela para a janela de instalação.
 
 ---
 
@@ -41,8 +56,9 @@ Projeto pensado para ter barreira mínima de entrada — sem frameworks pesados 
 
 * **HTML5 / CSS3** (Tailwind CSS)
 * **JavaScript (Vanilla)**
-* **IndexedDB** (armazenamento local de alta capacidade)
-* **PDF.js** (renderização de documentos PDF no navegador)
+* **IndexedDB** (armazenamento local offline)
+* **PDF.js** (renderização contínua de PDFs no navegador)
+* **Google Identity Services & Drive API v3** (sincronização opcional *Bring Your Own Cloud*)
 
 ---
 
