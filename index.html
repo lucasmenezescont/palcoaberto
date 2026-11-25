@@ -359,20 +359,6 @@
             Conecte sua conta Google para sincronizar cifras, PDFs e setlists entre computador, celular e tablet usando seu próprio Google Drive.
           </p>
 
-          <!-- Aviso caso o Client ID ainda não tenha sido colado no código -->
-          <div id="cloud-clientid-setup" class="hidden p-4 rounded-2xl t-bg border t-border space-y-2.5">
-            <p class="text-xs font-semibold t-text">Configuração pendente (Client ID)</p>
-            <p class="text-xs t-text-sec leading-relaxed">
-              Cole abaixo o seu <code class="font-mono t-text">Client ID</code> do Google Cloud para testar agora, ou defina-o direto na constante <code class="font-mono t-text">GOOGLE_CLIENT_ID</code> do <code class="font-mono t-text">index.html</code>.
-            </p>
-            <div class="flex gap-2">
-              <input id="input-google-client-id" type="text" placeholder="123456...apps.googleusercontent.com" class="flex-1 px-3 py-2 rounded-xl t-input text-xs font-mono" />
-              <button id="btn-save-client-id" type="button" class="px-3 py-2 rounded-xl t-elevated t-elevated-hover border t-border t-text text-xs font-semibold transition">
-                Salvar
-              </button>
-            </div>
-          </div>
-
           <button id="btn-google-signin" type="button" class="w-full py-3.5 px-4 rounded-2xl t-btn-primary font-semibold text-sm flex items-center justify-center gap-2.5 transition active:scale-95">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
               <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/>
@@ -805,13 +791,12 @@
   <!-- ==================== LÓGICA DA APLICAÇÃO ==================== -->
   <script>
     // =========================================================================
-    // CONFIGURAÇÃO DO GOOGLE DRIVE (COLE SEU CLIENT ID AQUI QUANDO GERAR)
+    // CONFIGURAÇÃO DO GOOGLE DRIVE
     // =========================================================================
     const GOOGLE_CLIENT_ID = '1087904594089-457mjahaks00v8ufd404ss1k4psbsbpm.apps.googleusercontent.com';
     const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
     const CLOUD_FOLDER_NAME = 'Palco Aberto';
     const CLOUD_BACKUP_FILENAME = 'palco-aberto-cloud.json';
-    const CLIENT_ID_STORAGE_KEY = 'palco_aberto_google_client_id';
 
     // =========================================================================
     // CONFIGURAÇÃO PDF.JS
@@ -867,15 +852,8 @@
     };
 
     // =========================================================================
-    // INTEGRAÇÃO GOOGLE DRIVE (OAUTH 2.0 + DRIVE REST API v3 appDataFolder)
+    // INTEGRAÇÃO GOOGLE DRIVE (OAUTH 2.0 + DRIVE REST API v3 — PASTA VISÍVEL)
     // =========================================================================
-    function getActiveGoogleClientId() {
-      if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== '1087904594089-457mjahaks00v8ufd404ss1k4psbsbpm.apps.googleusercontent.com') {
-        return GOOGLE_CLIENT_ID.trim();
-      }
-      return (localStorage.getItem(CLIENT_ID_STORAGE_KEY) || '').trim();
-    }
-
     function openCloudModal() {
       updateCloudUI();
       document.getElementById('modal-cloud').classList.remove('hidden');
@@ -891,20 +869,9 @@
     function updateCloudUI() {
       const disconnectedView = document.getElementById('cloud-disconnected-view');
       const connectedView = document.getElementById('cloud-connected-view');
-      const setupBox = document.getElementById('cloud-clientid-setup');
       const headerIcon = document.getElementById('header-cloud-icon');
       const headerAvatar = document.getElementById('header-cloud-avatar');
       const headerLabel = document.getElementById('header-cloud-label');
-
-      const activeClientId = getActiveGoogleClientId();
-      const inputClientId = document.getElementById('input-google-client-id');
-
-      if (!activeClientId) {
-        setupBox.classList.remove('hidden');
-      } else {
-        setupBox.classList.add('hidden');
-        if (inputClientId) inputClientId.value = activeClientId;
-      }
 
       if (state.cloud.accessToken && state.cloud.user) {
         disconnectedView.classList.add('hidden');
@@ -928,7 +895,6 @@
         headerLabel.textContent = 'Nuvem';
       }
 
-      // Estado de carregamento dos botões e link da pasta visível
       document.getElementById('btn-cloud-upload').disabled = state.cloud.busy;
       document.getElementById('btn-cloud-download').disabled = state.cloud.busy || !state.cloud.remoteFile;
 
@@ -948,13 +914,6 @@
         return;
       }
 
-      const clientId = getActiveGoogleClientId();
-      if (!clientId) {
-        document.getElementById('cloud-clientid-setup').classList.remove('hidden');
-        showToast('Configure o Client ID do Google primeiro.', 'error');
-        return;
-      }
-
       if (!window.google || !google.accounts || !google.accounts.oauth2) {
         showToast('Serviço do Google ainda carregando. Tente novamente.', 'error');
         return;
@@ -962,7 +921,7 @@
 
       try {
         state.cloud.tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
+          client_id: GOOGLE_CLIENT_ID,
           scope: GOOGLE_SCOPES,
           callback: async (tokenResponse) => {
             if (tokenResponse.error) {
@@ -1169,7 +1128,6 @@
 
         let res;
         if (state.cloud.remoteFile && state.cloud.remoteFile.id) {
-          // Atualiza arquivo existente dentro da pasta visível "Palco Aberto"
           res = await fetch(
             `https://www.googleapis.com/upload/drive/v3/files/${state.cloud.remoteFile.id}?uploadType=media`,
             {
@@ -1182,7 +1140,6 @@
             }
           );
         } else {
-          // Cria novo arquivo dentro da pasta visível "Palco Aberto"
           const boundary = '-------PalcoAbertoBoundary' + Date.now();
           const metadata = {
             name: CLOUD_BACKUP_FILENAME,
@@ -1261,17 +1218,6 @@
     document.getElementById('btn-cloud-upload').addEventListener('click', uploadBackupToDrive);
     document.getElementById('btn-cloud-download').addEventListener('click', downloadBackupFromDrive);
     document.getElementById('btn-cloud-refresh').addEventListener('click', checkCloudBackupFile);
-
-    document.getElementById('btn-save-client-id').addEventListener('click', () => {
-      const val = document.getElementById('input-google-client-id').value.trim();
-      if (!val) {
-        showToast('Cole um Client ID válido.', 'error');
-        return;
-      }
-      localStorage.setItem(CLIENT_ID_STORAGE_KEY, val);
-      updateCloudUI();
-      showToast('Client ID salvo neste navegador.');
-    });
 
     // =========================================================================
     // SISTEMA DE TEMAS & COR DOS ACORDES (localStorage + CSS Variables)
