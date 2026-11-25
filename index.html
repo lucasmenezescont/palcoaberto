@@ -23,6 +23,9 @@
   <!-- PDF.js 3.11.174 via cdnjs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
+  <!-- Google Identity Services (OAuth 2.0 para Google Drive) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -215,11 +218,10 @@
 
   <!-- ==================== CABEÇALHO LIMPO ==================== -->
   <header class="sticky top-0 z-30 t-floating border-b t-border">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-2 sm:gap-3">
       <!-- Marca: Palco Aberto -->
       <div class="flex items-center gap-3 min-w-0">
         <div class="w-9 h-9 rounded-2xl t-elevated border t-border flex items-center justify-center shrink-0">
-          <!-- Ícone minimalista de nota musical -->
           <svg class="w-5 h-5 t-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
           </svg>
@@ -228,7 +230,7 @@
       </div>
 
       <!-- Ações do Cabeçalho -->
-      <div class="flex items-center gap-2 shrink-0">
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <!-- Botão Popup de Aparência / Cores -->
         <button id="btn-open-theme" type="button" class="p-2.5 rounded-2xl t-surface t-elevated-hover border t-border t-text-sec hover:t-text transition active:scale-95" title="Aparência e Cores">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
@@ -239,20 +241,32 @@
           </svg>
         </button>
 
-        <!-- Botão Discreto Backup -->
-        <button id="btn-open-backup" type="button" class="px-3.5 py-2.5 rounded-2xl t-surface t-elevated-hover border t-border t-text-sec hover:t-text text-sm font-medium flex items-center gap-2 transition active:scale-95" title="Backup Portátil">
+        <!-- Botão Google Drive / Conta Nuvem -->
+        <button id="btn-open-cloud" type="button" class="px-3 py-2.5 rounded-2xl t-surface t-elevated-hover border t-border t-text-sec hover:t-text text-sm font-medium flex items-center gap-2 transition active:scale-95" title="Google Drive (Nuvem)">
+          <span id="header-cloud-icon" class="relative flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+            </svg>
+          </span>
+          <img id="header-cloud-avatar" src="" alt="Conta Google" class="hidden w-5 h-5 rounded-full object-cover border t-border" referrerpolicy="no-referrer" />
+          <span id="header-cloud-label" class="hidden sm:inline">Nuvem</span>
+        </button>
+
+        <!-- Botão Discreto Backup Local -->
+        <button id="btn-open-backup" type="button" class="p-2.5 sm:px-3.5 sm:py-2.5 rounded-2xl t-surface t-elevated-hover border t-border t-text-sec hover:t-text text-sm font-medium flex items-center gap-2 transition active:scale-95" title="Backup Local (.json)">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-          <span class="hidden sm:inline">Backup</span>
+          <span class="hidden md:inline">Backup</span>
         </button>
 
         <!-- Botão Primário + Nova Música -->
-        <button id="btn-new-song" type="button" class="px-4 py-2.5 rounded-2xl t-btn-primary font-semibold text-sm flex items-center gap-1.5 shadow-sm transition active:scale-95">
+        <button id="btn-new-song" type="button" class="px-3.5 sm:px-4 py-2.5 rounded-2xl t-btn-primary font-semibold text-sm flex items-center gap-1.5 shadow-sm transition active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          <span>Nova Música</span>
+          <span class="hidden sm:inline">Nova Música</span>
+          <span class="sm:hidden">Nova</span>
         </button>
       </div>
     </div>
@@ -323,6 +337,107 @@
     </section>
   </main>
 
+  <!-- ==================== MODAL: GOOGLE DRIVE (NUVEM) ==================== -->
+  <div id="modal-cloud" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="t-surface border t-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="px-6 py-4 border-b t-border flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-5 h-5 t-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+          </svg>
+          <h3 class="text-base font-bold t-text">Google Drive</h3>
+        </div>
+        <button onclick="closeCloudModal()" type="button" class="p-2 rounded-xl t-text-sec hover:t-text t-elevated-hover transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <!-- Estado: Desconectado -->
+        <div id="cloud-disconnected-view" class="space-y-4">
+          <p class="text-sm t-text-sec leading-relaxed">
+            Conecte sua conta Google para sincronizar cifras, PDFs e setlists entre computador, celular e tablet usando seu próprio Google Drive.
+          </p>
+
+          <!-- Aviso caso o Client ID ainda não tenha sido colado no código -->
+          <div id="cloud-clientid-setup" class="hidden p-4 rounded-2xl t-bg border t-border space-y-2.5">
+            <p class="text-xs font-semibold t-text">Configuração pendente (Client ID)</p>
+            <p class="text-xs t-text-sec leading-relaxed">
+              Cole abaixo o seu <code class="font-mono t-text">Client ID</code> do Google Cloud para testar agora, ou defina-o direto na constante <code class="font-mono t-text">GOOGLE_CLIENT_ID</code> do <code class="font-mono t-text">index.html</code>.
+            </p>
+            <div class="flex gap-2">
+              <input id="input-google-client-id" type="text" placeholder="123456...apps.googleusercontent.com" class="flex-1 px-3 py-2 rounded-xl t-input text-xs font-mono" />
+              <button id="btn-save-client-id" type="button" class="px-3 py-2 rounded-xl t-elevated t-elevated-hover border t-border t-text text-xs font-semibold transition">
+                Salvar
+              </button>
+            </div>
+          </div>
+
+          <button id="btn-google-signin" type="button" class="w-full py-3.5 px-4 rounded-2xl t-btn-primary font-semibold text-sm flex items-center justify-center gap-2.5 transition active:scale-95">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/>
+            </svg>
+            <span>Entrar com Google</span>
+          </button>
+
+          <p class="text-[11px] t-text-muted text-center leading-relaxed">
+            Cria uma pasta visível <strong>Palco Aberto</strong> no seu Drive. O aplicativo só acessa os arquivos criados por ele mesmo.
+          </p>
+        </div>
+
+        <!-- Estado: Conectado -->
+        <div id="cloud-connected-view" class="hidden space-y-4">
+          <!-- Cartão de Perfil -->
+          <div class="p-3.5 rounded-2xl t-bg border t-border flex items-center gap-3">
+            <img id="cloud-user-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover border t-border shrink-0" referrerpolicy="no-referrer" />
+            <div class="min-w-0 flex-1">
+              <p id="cloud-user-name" class="text-sm font-bold t-text truncate">Usuário</p>
+              <p id="cloud-user-email" class="text-xs t-text-sec truncate">email@gmail.com</p>
+            </div>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" title="Conectado"></span>
+          </div>
+
+          <!-- Status do arquivo e link direto para a pasta visível no Drive -->
+          <div class="p-3.5 rounded-2xl t-elevated border t-border space-y-2 text-xs">
+            <div class="flex items-center justify-between gap-2">
+              <span class="t-text-sec">Backup na nuvem</span>
+              <span id="cloud-file-status" class="font-mono t-text font-medium">Verificando...</span>
+            </div>
+            <div id="cloud-folder-row" class="hidden pt-2 border-t t-border flex items-center justify-between gap-2">
+              <span class="t-text-muted">Pasta: Meu Drive / Palco Aberto</span>
+              <a id="cloud-folder-link" href="#" target="_blank" rel="noopener noreferrer" class="font-semibold t-text underline underline-offset-2 hover:opacity-80 transition">
+                Abrir pasta
+              </a>
+            </div>
+          </div>
+
+          <!-- Ações de Sincronização -->
+          <div class="space-y-2.5">
+            <button id="btn-cloud-upload" type="button" class="w-full py-3.5 px-4 rounded-2xl t-btn-primary font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span>Enviar para o Drive</span>
+            </button>
+
+            <button id="btn-cloud-download" type="button" class="w-full py-3.5 px-4 rounded-2xl t-elevated t-elevated-hover border t-border t-text font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Baixar do Drive</span>
+            </button>
+          </div>
+
+          <!-- Desconectar -->
+          <div class="pt-3 border-t t-border flex justify-between items-center">
+            <button id="btn-cloud-refresh" type="button" class="text-xs font-medium t-text-sec hover:t-text transition">
+              Atualizar status
+            </button>
+            <button id="btn-google-signout" type="button" class="text-xs font-semibold text-red-400 hover:text-red-300 transition">
+              Sair da conta
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL: APARÊNCIA & CORES ==================== -->
   <div id="modal-theme" class="hidden fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="t-surface border t-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
@@ -376,12 +491,10 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2.5">
-            <!-- Swatch Padrão (Branco no escuro / Preto no claro) -->
             <button data-chord-color="default" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 t-border flex items-center justify-center transition active:scale-95" title="Contraste Padrão (P&B)">
               <span class="w-5 h-5 rounded-full bg-gradient-to-tr from-black via-zinc-500 to-white border border-zinc-500/40"></span>
             </button>
 
-            <!-- Swatches Rápidos -->
             <button data-chord-color="#38BDF8" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 border-transparent flex items-center justify-center transition active:scale-95" title="Ciano">
               <span class="w-6 h-6 rounded-full bg-[#38BDF8]"></span>
             </button>
@@ -398,7 +511,6 @@
               <span class="w-6 h-6 rounded-full bg-[#C084FC]"></span>
             </button>
 
-            <!-- Seletor de Cor Livre -->
             <label class="w-10 h-10 rounded-2xl t-elevated border t-border flex items-center justify-center cursor-pointer transition active:scale-95" title="Escolher cor livre">
               <svg class="w-4 h-4 t-text-sec" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
               <input id="input-custom-chord-color" type="color" value="#ffffff" class="sr-only" />
@@ -523,7 +635,7 @@
   <div id="modal-backup" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="t-surface border t-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
       <div class="px-6 py-4 border-b t-border flex items-center justify-between">
-        <h3 class="text-base font-bold t-text">Backup Portátil</h3>
+        <h3 class="text-base font-bold t-text">Backup Local</h3>
         <button onclick="closeBackupModal()" type="button" class="p-2 rounded-xl t-text-sec hover:t-text t-elevated-hover transition">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
@@ -531,7 +643,7 @@
 
       <div class="p-6 space-y-4">
         <p class="text-sm t-text-sec leading-relaxed">
-          Salve todo o seu repertório, PDFs e setlists em um único arquivo <code class="font-mono t-text">.json</code> para guardar na nuvem ou transferir para outro aparelho.
+          Salve todo o seu repertório, PDFs e setlists em um único arquivo <code class="font-mono t-text">.json</code> para guardar offline ou transferir manualmente.
         </p>
 
         <button id="btn-export-json" type="button" class="w-full py-3.5 px-4 rounded-2xl t-btn-primary font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95">
@@ -545,7 +657,7 @@
           <input id="input-import-json" type="file" accept="application/json,.json" class="hidden" />
         </label>
 
-        <!-- Status discreto de armazenamento offline dentro do modal de Backup -->
+        <!-- Status discreto de armazenamento offline -->
         <div class="pt-3 border-t t-border flex items-center justify-between text-xs t-text-muted">
           <span>Armazenamento local</span>
           <span id="backup-storage-status" class="flex items-center gap-1.5">
@@ -564,7 +676,7 @@
       <p id="confirm-message" class="text-sm t-text-sec leading-relaxed">Deseja continuar?</p>
       <div class="flex justify-end gap-2 pt-2">
         <button id="confirm-cancel" type="button" class="px-4 py-2.5 rounded-2xl t-elevated t-elevated-hover t-text-sec text-sm font-semibold transition">Cancelar</button>
-        <button id="confirm-ok" type="button" class="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">Excluir</button>
+        <button id="confirm-ok" type="button" class="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">Confirmar</button>
       </div>
     </div>
   </div>
@@ -651,13 +763,11 @@
 
         <!-- Controles de Texto: Fonte e Tom -->
         <div id="stage-text-controls" class="flex items-center gap-2">
-          <!-- Tamanho da Fonte -->
           <div class="flex items-center t-elevated border t-border rounded-2xl p-1 gap-0.5">
             <button id="btn-font-down" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Diminuir fonte">A-</button>
             <button id="btn-font-up" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Aumentar fonte">A+</button>
           </div>
 
-          <!-- Transposição de Tom -->
           <div class="flex items-center t-elevated border t-border rounded-2xl p-1 gap-0.5">
             <button id="btn-transpose-down" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Meio tom abaixo">Tom -</button>
             <span id="label-transpose" class="text-xs font-mono font-bold t-text-sec px-1 min-w-[26px] text-center">0</span>
@@ -669,7 +779,7 @@
         <div id="stage-pdf-controls" class="hidden flex items-center">
           <button id="btn-pdf-invert" type="button" class="px-3.5 py-2 rounded-2xl t-elevated t-elevated-hover border t-border t-text text-xs font-semibold flex items-center gap-1.5 transition active:scale-95">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-            <span id="label-pdf-invert">Inverter Cores (Noturno)</span>
+            <span id="label-pdf-invert">Noturno: ON</span>
           </button>
         </div>
 
@@ -695,6 +805,15 @@
   <!-- ==================== LÓGICA DA APLICAÇÃO ==================== -->
   <script>
     // =========================================================================
+    // CONFIGURAÇÃO DO GOOGLE DRIVE (COLE SEU CLIENT ID AQUI QUANDO GERAR)
+    // =========================================================================
+    const GOOGLE_CLIENT_ID = 'COLE_SEU_CLIENT_ID_AQUI';
+    const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+    const CLOUD_FOLDER_NAME = 'Palco Aberto';
+    const CLOUD_BACKUP_FILENAME = 'palco-aberto-cloud.json';
+    const CLIENT_ID_STORAGE_KEY = 'palco_aberto_google_client_id';
+
+    // =========================================================================
     // CONFIGURAÇÃO PDF.JS
     // =========================================================================
     if (window.pdfjsLib) {
@@ -714,8 +833,16 @@
       activeTab: 'musicas',
       searchQuery: '',
       prefs: {
-        theme: 'pb',         // 'pb' | 'oled' | 'soft' | 'light'
-        chordColor: 'default' // 'default' ou hex '#38BDF8'
+        theme: 'pb',
+        chordColor: 'default'
+      },
+      cloud: {
+        tokenClient: null,
+        accessToken: null,
+        user: null,
+        folderId: null,
+        remoteFile: null,
+        busy: false,
       },
       stage: {
         active: false,
@@ -724,7 +851,7 @@
         setlistIndex: 0,
         transposeSteps: 0,
         fontSize: 18,
-        speed: 2.0, // escala 0.5 a 10.0
+        speed: 2.0,
         pdfNightMode: true,
         isScrolling: false,
         rafId: null,
@@ -738,6 +865,404 @@
       pendingPdfBlob: null,
       addToSetlistSongId: null,
     };
+
+    // =========================================================================
+    // INTEGRAÇÃO GOOGLE DRIVE (OAUTH 2.0 + DRIVE REST API v3 appDataFolder)
+    // =========================================================================
+    function getActiveGoogleClientId() {
+      if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_ID !== 'COLE_SEU_CLIENT_ID_AQUI') {
+        return GOOGLE_CLIENT_ID.trim();
+      }
+      return (localStorage.getItem(CLIENT_ID_STORAGE_KEY) || '').trim();
+    }
+
+    function openCloudModal() {
+      updateCloudUI();
+      document.getElementById('modal-cloud').classList.remove('hidden');
+      if (state.cloud.accessToken) {
+        checkCloudBackupFile();
+      }
+    }
+
+    function closeCloudModal() {
+      document.getElementById('modal-cloud').classList.add('hidden');
+    }
+
+    function updateCloudUI() {
+      const disconnectedView = document.getElementById('cloud-disconnected-view');
+      const connectedView = document.getElementById('cloud-connected-view');
+      const setupBox = document.getElementById('cloud-clientid-setup');
+      const headerIcon = document.getElementById('header-cloud-icon');
+      const headerAvatar = document.getElementById('header-cloud-avatar');
+      const headerLabel = document.getElementById('header-cloud-label');
+
+      const activeClientId = getActiveGoogleClientId();
+      const inputClientId = document.getElementById('input-google-client-id');
+
+      if (!activeClientId) {
+        setupBox.classList.remove('hidden');
+      } else {
+        setupBox.classList.add('hidden');
+        if (inputClientId) inputClientId.value = activeClientId;
+      }
+
+      if (state.cloud.accessToken && state.cloud.user) {
+        disconnectedView.classList.add('hidden');
+        connectedView.classList.remove('hidden');
+
+        document.getElementById('cloud-user-name').textContent = state.cloud.user.name || 'Músico';
+        document.getElementById('cloud-user-email').textContent = state.cloud.user.email || '';
+        const avatarEl = document.getElementById('cloud-user-avatar');
+        if (state.cloud.user.picture) {
+          avatarEl.src = state.cloud.user.picture;
+          headerAvatar.src = state.cloud.user.picture;
+          headerAvatar.classList.remove('hidden');
+          headerIcon.classList.add('hidden');
+        }
+      // Estado de carregamento dos botões e link da pasta visível
+      document.getElementById('btn-cloud-upload').disabled = state.cloud.busy;
+      document.getElementById('btn-cloud-download').disabled = state.cloud.busy || !state.cloud.remoteFile;
+
+      const folderRow = document.getElementById('cloud-folder-row');
+      const folderLink = document.getElementById('cloud-folder-link');
+      if (state.cloud.folderId) {
+        folderLink.href = `https://drive.google.com/drive/folders/${state.cloud.folderId}`;
+        folderRow.classList.remove('hidden');
+      } else {
+        folderRow.classList.add('hidden');
+      }
+    }
+
+    function signInWithGoogle() {
+      if (!navigator.onLine) {
+        showToast('Sem conexão com a internet.', 'error');
+        return;
+      }
+
+      const clientId = getActiveGoogleClientId();
+      if (!clientId) {
+        document.getElementById('cloud-clientid-setup').classList.remove('hidden');
+        showToast('Configure o Client ID do Google primeiro.', 'error');
+        return;
+      }
+
+      if (!window.google || !google.accounts || !google.accounts.oauth2) {
+        showToast('Serviço do Google ainda carregando. Tente novamente.', 'error');
+        return;
+      }
+
+      try {
+        state.cloud.tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: GOOGLE_SCOPES,
+          callback: async (tokenResponse) => {
+            if (tokenResponse.error) {
+              console.error('Erro OAuth:', tokenResponse);
+              showToast('Não foi possível conectar ao Google.', 'error');
+              return;
+            }
+            state.cloud.accessToken = tokenResponse.access_token;
+            await fetchGoogleUserProfile();
+            updateCloudUI();
+            await checkCloudBackupFile();
+            showToast('Conectado ao Google Drive.');
+          },
+        });
+        state.cloud.tokenClient.requestAccessToken({ prompt: 'consent' });
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao iniciar login com Google.', 'error');
+      }
+    }
+
+    async function fetchGoogleUserProfile() {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${state.cloud.accessToken}` },
+        });
+        if (!res.ok) throw new Error('Falha ao buscar perfil');
+        state.cloud.user = await res.json();
+      } catch (err) {
+        console.error(err);
+        state.cloud.user = { name: 'Conta Google', email: '' };
+      }
+    }
+
+    function signOutFromGoogle() {
+      if (state.cloud.accessToken && window.google?.accounts?.oauth2) {
+        google.accounts.oauth2.revoke(state.cloud.accessToken, () => {});
+      }
+      state.cloud.accessToken = null;
+      state.cloud.user = null;
+      state.cloud.folderId = null;
+      state.cloud.remoteFile = null;
+      updateCloudUI();
+      showToast('Conta desconectada.');
+    }
+
+    async function findCloudFolder() {
+      const q = encodeURIComponent(
+        `mimeType='application/vnd.google-apps.folder' and name='${CLOUD_FOLDER_NAME}' and trashed=false`
+      );
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files?spaces=drive&q=${q}&fields=files(id,name)`,
+        { headers: { Authorization: `Bearer ${state.cloud.accessToken}` } }
+      );
+      if (res.status === 401) throw new Error('UNAUTHORIZED');
+      if (!res.ok) throw new Error('Erro ao buscar pasta no Drive');
+      const data = await res.json();
+      return data.files && data.files[0] ? data.files[0].id : null;
+    }
+
+    async function ensureCloudFolder() {
+      if (state.cloud.folderId) return state.cloud.folderId;
+      const existingId = await findCloudFolder();
+      if (existingId) {
+        state.cloud.folderId = existingId;
+        return existingId;
+      }
+
+      const res = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${state.cloud.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: CLOUD_FOLDER_NAME,
+          mimeType: 'application/vnd.google-apps.folder',
+        }),
+      });
+      if (!res.ok) throw new Error('Erro ao criar pasta Palco Aberto no Drive');
+      const folder = await res.json();
+      state.cloud.folderId = folder.id;
+      return folder.id;
+    }
+
+    async function checkCloudBackupFile() {
+      const statusEl = document.getElementById('cloud-file-status');
+      if (!state.cloud.accessToken) return;
+      statusEl.textContent = 'Verificando...';
+
+      try {
+        const folderId = await findCloudFolder();
+        state.cloud.folderId = folderId;
+
+        if (!folderId) {
+          state.cloud.remoteFile = null;
+          statusEl.textContent = 'Nenhum backup salvo';
+          return;
+        }
+
+        const q = encodeURIComponent(
+          `name='${CLOUD_BACKUP_FILENAME}' and '${folderId}' in parents and trashed=false`
+        );
+        const url = `https://www.googleapis.com/drive/v3/files?spaces=drive&q=${q}&fields=files(id,name,modifiedTime,size)`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${state.cloud.accessToken}` },
+        });
+
+        if (res.status === 401) {
+          signOutFromGoogle();
+          showToast('Sessão expirada. Entre novamente.', 'error');
+          return;
+        }
+        if (!res.ok) throw new Error('Erro Drive API');
+
+        const data = await res.json();
+        const file = data.files && data.files[0];
+        state.cloud.remoteFile = file || null;
+
+        if (file) {
+          const dt = new Date(file.modifiedTime);
+          const dateStr = dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+          const timeStr = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          const sizeKb = file.size ? `${Math.max(1, Math.round(file.size / 1024))} KB` : '';
+          statusEl.textContent = `${dateStr} às ${timeStr}${sizeKb ? ' • ' + sizeKb : ''}`;
+        } else {
+          statusEl.textContent = 'Nenhum backup salvo';
+        }
+      } catch (err) {
+        if (err.message === 'UNAUTHORIZED') {
+          signOutFromGoogle();
+          showToast('Sessão expirada. Entre novamente.', 'error');
+          return;
+        }
+        console.error(err);
+        statusEl.textContent = 'Erro ao verificar';
+      } finally {
+        updateCloudUI();
+      }
+    }
+
+    async function buildBackupPayload() {
+      const musicas = await dbGetAll('musicas');
+      const setlists = await dbGetAll('setlists');
+
+      const serializedMusicas = [];
+      for (const m of musicas) {
+        const copy = { ...m };
+        if (copy.arquivoPdfBlob instanceof Blob) {
+          copy.arquivoPdfBase64 = await blobToBase64(copy.arquivoPdfBlob);
+        }
+        delete copy.arquivoPdfBlob;
+        serializedMusicas.push(copy);
+      }
+
+      return {
+        app: 'Palco Aberto',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        musicas: serializedMusicas,
+        setlists,
+      };
+    }
+
+    async function restoreBackupPayload(data) {
+      if (!data || !Array.isArray(data.musicas) || !Array.isArray(data.setlists)) {
+        throw new Error('Formato de backup inválido.');
+      }
+
+      let countSongs = 0;
+      for (const m of data.musicas) {
+        const obj = { ...m };
+        if (obj.arquivoPdfBase64) {
+          obj.arquivoPdfBlob = await base64ToBlob(obj.arquivoPdfBase64);
+          delete obj.arquivoPdfBase64;
+        } else {
+          obj.arquivoPdfBlob = null;
+        }
+        await dbPut('musicas', obj);
+        countSongs++;
+      }
+
+      let countSetlists = 0;
+      for (const sl of data.setlists) {
+        await dbPut('setlists', sl);
+        countSetlists++;
+      }
+
+      await refreshDataFromDB();
+      return { countSongs, countSetlists };
+    }
+
+    async function uploadBackupToDrive() {
+      if (!state.cloud.accessToken || state.cloud.busy) return;
+      state.cloud.busy = true;
+      updateCloudUI();
+      const statusEl = document.getElementById('cloud-file-status');
+      statusEl.textContent = 'Enviando...';
+
+      try {
+        const folderId = await ensureCloudFolder();
+        const payload = await buildBackupPayload();
+        const jsonString = JSON.stringify(payload);
+
+        let res;
+        if (state.cloud.remoteFile && state.cloud.remoteFile.id) {
+          // Atualiza arquivo existente dentro da pasta visível "Palco Aberto"
+          res = await fetch(
+            `https://www.googleapis.com/upload/drive/v3/files/${state.cloud.remoteFile.id}?uploadType=media`,
+            {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${state.cloud.accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: jsonString,
+            }
+          );
+        } else {
+          // Cria novo arquivo dentro da pasta visível "Palco Aberto"
+          const boundary = '-------PalcoAbertoBoundary' + Date.now();
+          const metadata = {
+            name: CLOUD_BACKUP_FILENAME,
+            parents: [folderId],
+            mimeType: 'application/json',
+          };
+          const multipartBody =
+            `--${boundary}\r\n` +
+            `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+            `${JSON.stringify(metadata)}\r\n` +
+            `--${boundary}\r\n` +
+            `Content-Type: application/json\r\n\r\n` +
+            `${jsonString}\r\n` +
+            `--${boundary}--`;
+
+          res = await fetch(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${state.cloud.accessToken}`,
+                'Content-Type': `multipart/related; boundary=${boundary}`,
+              },
+              body: multipartBody,
+            }
+          );
+        }
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await checkCloudBackupFile();
+        showToast('Repertório salvo em Meu Drive / Palco Aberto.');
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao enviar para o Drive.', 'error');
+        statusEl.textContent = 'Falha no envio';
+      } finally {
+        state.cloud.busy = false;
+        updateCloudUI();
+      }
+    }
+
+    async function downloadBackupFromDrive() {
+      if (!state.cloud.accessToken || !state.cloud.remoteFile || state.cloud.busy) return;
+      state.cloud.busy = true;
+      updateCloudUI();
+      const statusEl = document.getElementById('cloud-file-status');
+      statusEl.textContent = 'Baixando...';
+
+      try {
+        const res = await fetch(
+          `https://www.googleapis.com/drive/v3/files/${state.cloud.remoteFile.id}?alt=media`,
+          {
+            headers: { Authorization: `Bearer ${state.cloud.accessToken}` },
+          }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const { countSongs, countSetlists } = await restoreBackupPayload(data);
+        await checkCloudBackupFile();
+        closeCloudModal();
+        showToast(`Sincronizado: ${countSongs} músicas e ${countSetlists} setlists.`);
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao baixar backup do Drive.', 'error');
+        await checkCloudBackupFile();
+      } finally {
+        state.cloud.busy = false;
+        updateCloudUI();
+      }
+    }
+
+    // Listeners do Modal Google Drive
+    document.getElementById('btn-open-cloud').addEventListener('click', openCloudModal);
+    document.getElementById('btn-google-signin').addEventListener('click', signInWithGoogle);
+    document.getElementById('btn-google-signout').addEventListener('click', signOutFromGoogle);
+    document.getElementById('btn-cloud-upload').addEventListener('click', uploadBackupToDrive);
+    document.getElementById('btn-cloud-download').addEventListener('click', downloadBackupFromDrive);
+    document.getElementById('btn-cloud-refresh').addEventListener('click', checkCloudBackupFile);
+
+    document.getElementById('btn-save-client-id').addEventListener('click', () => {
+      const val = document.getElementById('input-google-client-id').value.trim();
+      if (!val) {
+        showToast('Cole um Client ID válido.', 'error');
+        return;
+      }
+      localStorage.setItem(CLIENT_ID_STORAGE_KEY, val);
+      updateCloudUI();
+      showToast('Client ID salvo neste navegador.');
+    });
 
     // =========================================================================
     // SISTEMA DE TEMAS & COR DOS ACORDES (localStorage + CSS Variables)
@@ -760,9 +1285,7 @@
             state.prefs.chordColor = saved.chordColor;
           }
         }
-      } catch (e) {
-        // Ignora erro de leitura do localStorage
-      }
+      } catch (e) {}
       applyAppearancePrefs();
     }
 
@@ -791,7 +1314,6 @@
     }
 
     function syncThemeModalUI() {
-      // Marca tema ativo
       document.querySelectorAll('.theme-choice-btn').forEach((btn) => {
         const isSelected = btn.getAttribute('data-theme-choice') === state.prefs.theme;
         if (isSelected) {
@@ -803,7 +1325,6 @@
         }
       });
 
-      // Marca swatch de acorde ativo
       const label = document.getElementById('chord-color-label');
       if (label) {
         label.textContent = state.prefs.chordColor === 'default' ? 'Padrão' : state.prefs.chordColor.toUpperCase();
@@ -1119,9 +1640,9 @@ Pro samba que você me convidou?`,
         .replace(/\r\n/g, '\n')
         .replace(/\t/g, '    ')
         .split('\n')
-        .map((line) => line.replace(/[ \t]+$/g, '')) // remove espaços à direita
+        .map((line) => line.replace(/[ \t]+$/g, ''))
         .join('\n')
-        .replace(/\n{3,}/g, '\n\n') // no máximo 1 linha vazia seguida
+        .replace(/\n{3,}/g, '\n\n')
         .trim();
     }
 
@@ -1478,7 +1999,6 @@ Pro samba que você me convidou?`,
       }
     }
 
-    // Smart Paste automático ao colar na textarea
     document.getElementById('song-conteudo').addEventListener('paste', () => {
       setTimeout(() => {
         const el = document.getElementById('song-conteudo');
@@ -1703,11 +2223,9 @@ Pro samba que você me convidou?`,
       state.stage.setlistIndex = setlistIndex;
       state.stage.transposeSteps = 0;
       state.stage.fontSize = song.tamanhoFonte || 18;
-      // Garante velocidade dentro da escala 0.5 a 10.0
       const savedSpeed = typeof song.velocidade === 'number' ? song.velocidade : 2.0;
       state.stage.speed = Math.min(10, Math.max(0.5, savedSpeed));
 
-      // Cabeçalho da Cifra
       document.getElementById('stage-song-title').textContent = song.titulo;
       document.getElementById('stage-song-artist').textContent = song.artista || 'Artista desconhecido';
       const tuningEl = document.getElementById('stage-song-tuning');
@@ -1722,7 +2240,6 @@ Pro samba que você me convidou?`,
       document.getElementById('label-speed').textContent = `${state.stage.speed.toFixed(1)}x`;
       document.getElementById('label-transpose').textContent = '0';
 
-      // Indicador e Navegação de Setlist
       const setlistIndicator = document.getElementById('stage-setlist-indicator');
       const setlistNav = document.getElementById('stage-setlist-nav');
       if (state.stage.setlist) {
@@ -1754,7 +2271,6 @@ Pro samba que você me convidou?`,
         textControls.classList.add('hidden');
         pdfContainer.classList.remove('hidden');
         pdfControls.classList.remove('hidden');
-        // No modo claro, PDF começa normal; nos modos escuros, começa invertido
         state.stage.pdfNightMode = state.prefs.theme !== 'light';
         updatePdfNightModeUI();
         await renderPdfInStage(song.arquivoPdfBlob);
@@ -1920,7 +2436,6 @@ Pro samba que você me convidou?`,
       const container = document.getElementById('stage-scroll-container');
 
       if (!state.stage.userInteracting) {
-        // Escala 0.5 a 10.0 convertida em pixels por segundo (7 px/s até 140 px/s)
         const pxPerSec = state.stage.speed * 14;
         state.stage.scrollAccumulator += pxPerSec * deltaSec;
         const maxScroll = container.scrollHeight - container.clientHeight;
@@ -1938,7 +2453,6 @@ Pro samba que você me convidou?`,
       state.stage.rafId = requestAnimationFrame(autoScrollStep);
     }
 
-    // Pausa momentânea se o músico deslizar a tela manualmente
     const stageScrollEl = document.getElementById('stage-scroll-container');
     function markUserScrolling() {
       if (!state.stage.isScrolling) return;
@@ -1982,9 +2496,7 @@ Pro samba que você me convidou?`,
         if ('wakeLock' in navigator) {
           state.stage.wakeLock = await navigator.wakeLock.request('screen');
         }
-      } catch (err) {
-        // Silencioso caso o navegador/contexto não permita Wake Lock
-      }
+      } catch (err) {}
     }
 
     async function releaseWakeLock() {
@@ -2074,9 +2586,7 @@ Pro samba que você me convidou?`,
     document.getElementById('btn-stage-prev').addEventListener('click', () => navigateSetlist(-1));
     document.getElementById('btn-stage-next').addEventListener('click', () => navigateSetlist(1));
 
-    // Atalhos de Teclado e Pedal Bluetooth
     document.addEventListener('keydown', (e) => {
-      // Fecha modal de temas com Esc primeiro
       const themeModal = document.getElementById('modal-theme');
       if (e.code === 'Escape' && !themeModal.classList.contains('hidden')) {
         closeThemeModal();
@@ -2105,7 +2615,7 @@ Pro samba que você me convidou?`,
     });
 
     // =========================================================================
-    // BACKUP PORTÁTIL (.JSON COM PDFs EM BASE64)
+    // BACKUP LOCAL PORTÁTIL (.JSON COM PDFs EM BASE64)
     // =========================================================================
     function blobToBase64(blob) {
       return new Promise((resolve, reject) => {
@@ -2133,27 +2643,7 @@ Pro samba que você me convidou?`,
 
     document.getElementById('btn-export-json').addEventListener('click', async () => {
       try {
-        const musicas = await dbGetAll('musicas');
-        const setlists = await dbGetAll('setlists');
-
-        const serializedMusicas = [];
-        for (const m of musicas) {
-          const copy = { ...m };
-          if (copy.arquivoPdfBlob instanceof Blob) {
-            copy.arquivoPdfBase64 = await blobToBase64(copy.arquivoPdfBlob);
-          }
-          delete copy.arquivoPdfBlob;
-          serializedMusicas.push(copy);
-        }
-
-        const payload = {
-          app: 'Palco Aberto',
-          version: 1,
-          exportedAt: new Date().toISOString(),
-          musicas: serializedMusicas,
-          setlists,
-        };
-
+        const payload = await buildBackupPayload();
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -2179,32 +2669,7 @@ Pro samba que você me convidou?`,
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-
-        if (!data || !Array.isArray(data.musicas) || !Array.isArray(data.setlists)) {
-          showToast('Arquivo de backup inválido.', 'error');
-          return;
-        }
-
-        let countSongs = 0;
-        for (const m of data.musicas) {
-          const obj = { ...m };
-          if (obj.arquivoPdfBase64) {
-            obj.arquivoPdfBlob = await base64ToBlob(obj.arquivoPdfBase64);
-            delete obj.arquivoPdfBase64;
-          } else {
-            obj.arquivoPdfBlob = null;
-          }
-          await dbPut('musicas', obj);
-          countSongs++;
-        }
-
-        let countSetlists = 0;
-        for (const sl of data.setlists) {
-          await dbPut('setlists', sl);
-          countSetlists++;
-        }
-
-        await refreshDataFromDB();
+        const { countSongs, countSetlists } = await restoreBackupPayload(data);
         closeBackupModal();
         showToast(`Restaurado: ${countSongs} músicas e ${countSetlists} setlists.`);
       } catch (err) {
@@ -2287,8 +2752,7 @@ Pro samba que você me convidou?`,
       });
     }
 
-    // Fecha modais ao clicar no fundo escuro (backdrop)
-    ['modal-theme', 'modal-song', 'modal-add-to-setlist', 'modal-backup'].forEach((modalId) => {
+    ['modal-cloud', 'modal-theme', 'modal-song', 'modal-add-to-setlist', 'modal-backup'].forEach((modalId) => {
       document.getElementById(modalId).addEventListener('click', (e) => {
         if (e.target.id === modalId) {
           e.target.classList.add('hidden');
@@ -2301,6 +2765,7 @@ Pro samba que você me convidou?`,
     // =========================================================================
     (async function bootstrap() {
       loadAppearancePrefs();
+      updateCloudUI();
       try {
         await initDB();
         await checkStoragePersistence();
