@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0B0B0C" id="meta-theme-color" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Palco Aberto</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter (UI) & JetBrains Mono (Cifras) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- PDF.js 3.11.174 via cdnjs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+          },
+          borderRadius: {
+            '2xl': '1rem',
+            '3xl': '1.25rem',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* =========================================================================
+       SISTEMA DE TEMAS VIA VARIÁVEIS CSS (PADRÃO: P&B MONOCROMÁTICO)
+       ========================================================================= */
+    :root,
+    [data-theme="pb"] {
+      --bg: #0B0B0C;
+      --surface: #161618;
+      --surface-elevated: #1E1E22;
+      --surface-hover: #26262B;
+      --border: #2A2A2E;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A1A1AA;
+      --text-muted: #71717A;
+      --btn-primary-bg: #FFFFFF;
+      --btn-primary-hover: #E4E4E7;
+      --btn-primary-text: #0B0B0C;
+      --lyric-color: #B3B3B3;
+      --chord-default: #FFFFFF;
+      --chord-bg: rgba(255, 255, 255, 0.08);
+      --stage-bg: #0B0B0C;
+      --floating-bg: rgba(22, 22, 24, 0.92);
+      --scrollbar-thumb: #2A2A2E;
+    }
+
+    [data-theme="oled"] {
+      --bg: #000000;
+      --surface: #0D0D0F;
+      --surface-elevated: #17171A;
+      --surface-hover: #222226;
+      --border: #232327;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A1A1AA;
+      --text-muted: #71717A;
+      --btn-primary-bg: #FFFFFF;
+      --btn-primary-hover: #E4E4E7;
+      --btn-primary-text: #000000;
+      --lyric-color: #B8B8B8;
+      --chord-default: #FFFFFF;
+      --chord-bg: rgba(255, 255, 255, 0.10);
+      --stage-bg: #000000;
+      --floating-bg: rgba(13, 13, 15, 0.94);
+      --scrollbar-thumb: #27272A;
+    }
+
+    [data-theme="soft"] {
+      --bg: #16181D;
+      --surface: #1F2229;
+      --surface-elevated: #282C35;
+      --surface-hover: #323742;
+      --border: #333845;
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      --btn-primary-bg: #F3F4F6;
+      --btn-primary-hover: #E5E7EB;
+      --btn-primary-text: #111827;
+      --lyric-color: #CBD5E1;
+      --chord-default: #FFFFFF;
+      --chord-bg: rgba(255, 255, 255, 0.09);
+      --stage-bg: #16181D;
+      --floating-bg: rgba(31, 34, 41, 0.92);
+      --scrollbar-thumb: #3B4252;
+    }
+
+    [data-theme="light"] {
+      --bg: #F6F7F9;
+      --surface: #FFFFFF;
+      --surface-elevated: #F0F2F5;
+      --surface-hover: #E5E7EB;
+      --border: #E2E5EA;
+      --text-primary: #111827;
+      --text-secondary: #4B5563;
+      --text-muted: #6B7280;
+      --btn-primary-bg: #111827;
+      --btn-primary-hover: #1F2937;
+      --btn-primary-text: #FFFFFF;
+      --lyric-color: #4B5563;
+      --chord-default: #09090B;
+      --chord-bg: rgba(17, 24, 39, 0.07);
+      --stage-bg: #FFFFFF;
+      --floating-bg: rgba(255, 255, 255, 0.94);
+      --scrollbar-thumb: #CBD5E1;
+    }
+
+    /* Cor ativa dos acordes (pode ser sobrescrita pelo usuário via JS) */
+    :root {
+      --chord-active: var(--chord-default);
+    }
+
+    /* Utilitários temáticos */
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .t-bg { background-color: var(--bg); }
+    .t-surface { background-color: var(--surface); }
+    .t-elevated { background-color: var(--surface-elevated); }
+    .t-elevated-hover:hover { background-color: var(--surface-hover); }
+    .t-border { border-color: var(--border); }
+    .t-text { color: var(--text-primary); }
+    .t-text-sec { color: var(--text-secondary); }
+    .t-text-muted { color: var(--text-muted); }
+
+    .t-btn-primary {
+      background-color: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+    }
+    .t-btn-primary:hover {
+      background-color: var(--btn-primary-hover);
+    }
+
+    .t-stage-bg { background-color: var(--stage-bg); }
+    .t-floating {
+      background-color: var(--floating-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Estilo da Cifra e Acordes */
+    .lyric-line {
+      color: var(--lyric-color);
+    }
+    .chord-token {
+      color: var(--chord-active);
+      background-color: var(--chord-bg);
+      font-weight: 700;
+      border-radius: 0.3rem;
+      padding: 0 0.16em;
+    }
+
+    /* Scrollbar discreta */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 9999px;
+    }
+
+    /* Filtro de inversão noturna para PDFs */
+    .pdf-night-mode canvas {
+      filter: invert(0.92) hue-rotate(180deg);
+    }
+
+    /* Inputs e foco suave */
+    .t-input {
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .t-input::placeholder {
+      color: var(--text-muted);
+    }
+    .t-input:focus {
+      outline: none;
+      border-color: var(--text-secondary);
+      box-shadow: 0 0 0 3px rgba(161, 161, 170, 0.14);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- ==================== CABEÇALHO LIMPO ==================== -->
+  <header class="sticky top-0 z-30 t-floating border-b t-border">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+      <!-- Marca: Palco Aberto -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-2xl t-elevated border t-border flex items-center justify-center shrink-0">
+          <!-- Ícone minimalista de nota musical -->
+          <svg class="w-5 h-5 t-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        </div>
+        <h1 class="text-lg sm:text-xl font-bold tracking-tight t-text truncate">Palco Aberto</h1>
+      </div>
+
+      <!-- Ações do Cabeçalho -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Botão Popup de Aparência / Cores -->
+        <button id="btn-open-theme" type="button" class="p-2.5 rounded-2xl t-surface t-elevated-hover border t-border t-text-sec hover:t-text transition active:scale-95" title="Aparência e Cores">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3a9 9 0 100 18 2.5 2.5 0 002.5-2.5c0-.66-.25-1.26-.66-1.71a1.5 1.5 0 011.12-2.5h1.54A4.5 4.5 0 0021 9.79C21 6.04 16.97 3 12 3z" />
+            <circle cx="7.5" cy="10.5" r="1" fill="currentColor" />
+            <circle cx="10.5" cy="7.5" r="1" fill="currentColor" />
+            <circle cx="14.5" cy="7.5" r="1" fill="currentColor" />
+          </svg>
+        </button>
+
+        <!-- Botão Discreto Backup -->
+        <button id="btn-open-backup" type="button" class="px-3.5 py-2.5 rounded-2xl t-surface t-elevated-hover border t-border t-text-sec hover:t-text text-sm font-medium flex items-center gap-2 transition active:scale-95" title="Backup Portátil">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <span class="hidden sm:inline">Backup</span>
+        </button>
+
+        <!-- Botão Primário + Nova Música -->
+        <button id="btn-new-song" type="button" class="px-4 py-2.5 rounded-2xl t-btn-primary font-semibold text-sm flex items-center gap-1.5 shadow-sm transition active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Nova Música</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== CONTEÚDO PRINCIPAL ==================== -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Navegação em Abas Arredondadas (Músicas / Setlists) -->
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <div class="inline-flex p-1.5 rounded-2xl t-surface border t-border w-full sm:w-auto">
+        <button id="tab-musicas" type="button" class="flex-1 sm:flex-none px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 t-btn-primary">
+          <span>Músicas</span>
+          <span id="count-musicas" class="text-xs opacity-75 font-mono">0</span>
+        </button>
+        <button id="tab-setlists" type="button" class="flex-1 sm:flex-none px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 t-text-sec hover:t-text">
+          <span>Setlists</span>
+          <span id="count-setlists" class="text-xs opacity-75 font-mono">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ABA 1: MÚSICAS -->
+    <section id="view-musicas" class="space-y-5">
+      <!-- Busca Instantânea -->
+      <div class="relative">
+        <svg class="w-5 h-5 t-text-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input id="search-input" type="text" placeholder="Buscar por título, artista, tom ou tag..." class="w-full pl-12 pr-4 py-3.5 rounded-2xl t-surface border t-border t-text placeholder:t-text-muted focus:outline-none focus:ring-2 focus:ring-zinc-500/30 transition text-sm sm:text-base" />
+      </div>
+
+      <!-- Grade de Músicas -->
+      <div id="songs-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Renderizado via JS -->
+      </div>
+
+      <!-- Estado Vazio -->
+      <div id="songs-empty" class="hidden text-center py-16 px-6 rounded-3xl t-surface border border-dashed t-border">
+        <p class="t-text font-semibold text-base mb-1">Nenhuma música encontrada</p>
+        <p class="t-text-sec text-sm mb-5">Adicione uma cifra em texto ou importe um arquivo PDF.</p>
+        <button onclick="openSongModal()" type="button" class="px-5 py-2.5 rounded-2xl t-btn-primary font-semibold text-sm transition active:scale-95">
+          + Nova Música
+        </button>
+      </div>
+    </section>
+
+    <!-- ABA 2: SETLISTS -->
+    <section id="view-setlists" class="hidden space-y-5">
+      <!-- Formulário Criar Setlist -->
+      <form id="form-new-setlist" class="flex flex-col sm:flex-row gap-3 t-surface p-4 rounded-3xl border t-border">
+        <input id="input-setlist-name" type="text" required placeholder="Nome do setlist (ex: Sexta no Bar, Acústico MPB)..." class="flex-1 px-4 py-3 rounded-2xl t-input text-sm sm:text-base" />
+        <button type="submit" class="px-5 py-3 rounded-2xl t-btn-primary font-semibold text-sm whitespace-nowrap transition active:scale-95">
+          + Criar Setlist
+        </button>
+      </form>
+
+      <!-- Lista de Setlists -->
+      <div id="setlists-container" class="space-y-4">
+        <!-- Renderizado via JS -->
+      </div>
+
+      <!-- Estado Vazio Setlists -->
+      <div id="setlists-empty" class="hidden text-center py-16 px-6 rounded-3xl t-surface border border-dashed t-border">
+        <p class="t-text font-semibold text-base mb-1">Nenhum setlist criado</p>
+        <p class="t-text-sec text-sm">Monte a sequência do seu show para navegar entre as cifras com um toque.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== MODAL: APARÊNCIA & CORES ==================== -->
+  <div id="modal-theme" class="hidden fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="t-surface border t-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="px-6 py-4 border-b t-border flex items-center justify-between">
+        <h3 class="text-base font-bold t-text">Aparência e Cores</h3>
+        <button onclick="closeThemeModal()" type="button" class="p-2 rounded-xl t-text-sec hover:t-text t-elevated-hover transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        <!-- Seção 1: Temas Prontos -->
+        <div class="space-y-3">
+          <label class="block text-xs font-semibold uppercase tracking-wider t-text-sec">Tema da Interface</label>
+          <div id="theme-options" class="grid grid-cols-2 gap-2.5">
+            <button data-theme-choice="pb" type="button" class="theme-choice-btn p-3 rounded-2xl border t-border text-left flex items-center gap-3 transition active:scale-95">
+              <span class="w-7 h-7 rounded-xl bg-[#0B0B0C] border border-zinc-600 flex items-center justify-center shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-white"></span>
+              </span>
+              <span class="text-sm font-semibold t-text">Padrão P&amp;B</span>
+            </button>
+
+            <button data-theme-choice="oled" type="button" class="theme-choice-btn p-3 rounded-2xl border t-border text-left flex items-center gap-3 transition active:scale-95">
+              <span class="w-7 h-7 rounded-xl bg-black border border-zinc-700 flex items-center justify-center shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-zinc-300"></span>
+              </span>
+              <span class="text-sm font-semibold t-text">OLED Puro</span>
+            </button>
+
+            <button data-theme-choice="soft" type="button" class="theme-choice-btn p-3 rounded-2xl border t-border text-left flex items-center gap-3 transition active:scale-95">
+              <span class="w-7 h-7 rounded-xl bg-[#1F2229] border border-slate-500 flex items-center justify-center shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span>
+              </span>
+              <span class="text-sm font-semibold t-text">Noturno Suave</span>
+            </button>
+
+            <button data-theme-choice="light" type="button" class="theme-choice-btn p-3 rounded-2xl border t-border text-left flex items-center gap-3 transition active:scale-95">
+              <span class="w-7 h-7 rounded-xl bg-white border border-zinc-300 flex items-center justify-center shrink-0">
+                <span class="w-2.5 h-2.5 rounded-full bg-zinc-900"></span>
+              </span>
+              <span class="text-sm font-semibold t-text">Dia / Claro</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Seção 2: Cor dos Acordes -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold uppercase tracking-wider t-text-sec">Cor dos Acordes</label>
+            <span id="chord-color-label" class="text-xs font-mono t-text-muted">Padrão</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Swatch Padrão (Branco no escuro / Preto no claro) -->
+            <button data-chord-color="default" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 t-border flex items-center justify-center transition active:scale-95" title="Contraste Padrão (P&B)">
+              <span class="w-5 h-5 rounded-full bg-gradient-to-tr from-black via-zinc-500 to-white border border-zinc-500/40"></span>
+            </button>
+
+            <!-- Swatches Rápidos -->
+            <button data-chord-color="#38BDF8" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 border-transparent flex items-center justify-center transition active:scale-95" title="Ciano">
+              <span class="w-6 h-6 rounded-full bg-[#38BDF8]"></span>
+            </button>
+            <button data-chord-color="#A3E635" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 border-transparent flex items-center justify-center transition active:scale-95" title="Verde-Limão">
+              <span class="w-6 h-6 rounded-full bg-[#A3E635]"></span>
+            </button>
+            <button data-chord-color="#FBBF24" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 border-transparent flex items-center justify-center transition active:scale-95" title="Âmbar">
+              <span class="w-6 h-6 rounded-full bg-[#FBBF24]"></span>
+            </button>
+            <button data-chord-color="#FB7185" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 border-transparent flex items-center justify-center transition active:scale-95" title="Coral">
+              <span class="w-6 h-6 rounded-full bg-[#FB7185]"></span>
+            </button>
+            <button data-chord-color="#C084FC" type="button" class="chord-swatch w-10 h-10 rounded-2xl border-2 border-transparent flex items-center justify-center transition active:scale-95" title="Lilás">
+              <span class="w-6 h-6 rounded-full bg-[#C084FC]"></span>
+            </button>
+
+            <!-- Seletor de Cor Livre -->
+            <label class="w-10 h-10 rounded-2xl t-elevated border t-border flex items-center justify-center cursor-pointer transition active:scale-95" title="Escolher cor livre">
+              <svg class="w-4 h-4 t-text-sec" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              <input id="input-custom-chord-color" type="color" value="#ffffff" class="sr-only" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Pré-visualização rápida -->
+        <div class="p-4 rounded-2xl t-stage-bg border t-border font-mono text-sm leading-relaxed">
+          <div><span class="chord-token">G</span>          <span class="chord-token">D7</span>         <span class="chord-token">G</span></div>
+          <div class="lyric-line">Não há, ó gente, ó não</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: NOVA / EDITAR MÚSICA ==================== -->
+  <div id="modal-song" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="t-surface border t-border rounded-3xl w-full max-w-2xl my-auto overflow-hidden shadow-2xl">
+      <div class="px-6 py-4 border-b t-border flex items-center justify-between">
+        <h2 id="modal-song-title" class="text-base sm:text-lg font-bold t-text">Nova Música</h2>
+        <button onclick="closeSongModal()" type="button" class="p-2 rounded-xl t-text-sec hover:t-text t-elevated-hover transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Abas do Modal: Texto vs PDF -->
+      <div class="px-6 pt-4">
+        <div class="grid grid-cols-2 p-1 rounded-2xl t-elevated border t-border">
+          <button id="btn-type-texto" type="button" onclick="switchSongModalType('texto')" class="py-2 rounded-xl text-sm font-semibold transition t-btn-primary">
+            Texto (Colar Cifra)
+          </button>
+          <button id="btn-type-pdf" type="button" onclick="switchSongModalType('pdf')" class="py-2 rounded-xl text-sm font-semibold transition t-text-sec hover:t-text">
+            Arquivo PDF
+          </button>
+        </div>
+      </div>
+
+      <form id="form-song" class="p-6 space-y-4 max-h-[76vh] overflow-y-auto">
+        <input type="hidden" id="song-id" />
+        <input type="hidden" id="song-tipo" value="texto" />
+
+        <!-- Upload PDF -->
+        <div id="field-pdf-upload" class="hidden">
+          <label class="block text-xs font-semibold uppercase tracking-wider t-text-sec mb-2">Arquivo PDF</label>
+          <label for="song-pdf-file" class="flex flex-col items-center justify-center w-full p-6 rounded-2xl border-2 border-dashed t-border t-bg hover:opacity-90 cursor-pointer transition">
+            <svg class="w-7 h-7 t-text mb-2" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span id="pdf-filename-label" class="text-sm font-medium t-text text-center">Toque para escolher um arquivo .PDF</span>
+            <input id="song-pdf-file" type="file" accept="application/pdf,.pdf" class="hidden" />
+          </label>
+        </div>
+
+        <!-- Metadados Principais -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label for="song-titulo" class="block text-xs font-semibold uppercase tracking-wider t-text-sec mb-1.5">Título *</label>
+            <input id="song-titulo" type="text" required placeholder="Ex: Pressentimento" class="w-full px-3.5 py-2.5 rounded-2xl t-input text-sm" />
+          </div>
+          <div>
+            <label for="song-artista" class="block text-xs font-semibold uppercase tracking-wider t-text-sec mb-1.5">Artista</label>
+            <input id="song-artista" type="text" placeholder="Ex: Fagner" class="w-full px-3.5 py-2.5 rounded-2xl t-input text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label for="song-tom" class="block text-xs font-semibold uppercase tracking-wider t-text-sec mb-1.5">Tom Original</label>
+            <input id="song-tom" type="text" placeholder="Ex: G, Am, E" class="w-full px-3.5 py-2.5 rounded-2xl t-input text-sm" />
+          </div>
+          <div>
+            <label for="song-afinacao" class="block text-xs font-semibold uppercase tracking-wider t-text-sec mb-1.5">Afinação</label>
+            <input id="song-afinacao" type="text" value="E A D G B E" placeholder="E A D G B E" class="w-full px-3.5 py-2.5 rounded-2xl t-input text-sm font-mono" />
+          </div>
+          <div>
+            <label for="song-tags" class="block text-xs font-semibold uppercase tracking-wider t-text-sec mb-1.5">Tags</label>
+            <input id="song-tags" type="text" placeholder="MPB, Bar, Samba" class="w-full px-3.5 py-2.5 rounded-2xl t-input text-sm" />
+          </div>
+        </div>
+
+        <!-- Smart Paste (Texto) -->
+        <div id="field-texto-content">
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="song-conteudo" class="block text-xs font-semibold uppercase tracking-wider t-text-sec">Cifra (Smart Paste)</label>
+            <button id="btn-clean-paste" type="button" class="text-xs font-medium t-text-sec hover:t-text underline underline-offset-2 transition">
+              Limpar espaços extras
+            </button>
+          </div>
+          <textarea id="song-conteudo" rows="10" placeholder="G             D7           G&#10;Não há, ó gente, ó não&#10;             E7           Am&#10;Luar como este do sertão..." class="w-full px-4 py-3 rounded-2xl t-input font-mono text-sm leading-relaxed whitespace-pre overflow-x-auto"></textarea>
+        </div>
+
+        <!-- Ações do Modal -->
+        <div class="flex items-center justify-end gap-2.5 pt-3 border-t t-border">
+          <button onclick="closeSongModal()" type="button" class="px-4 py-2.5 rounded-2xl t-elevated t-elevated-hover t-text-sec font-semibold text-sm transition">
+            Cancelar
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-2xl t-btn-primary font-semibold text-sm transition active:scale-95">
+            Salvar Música
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: ADICIONAR A SETLIST ==================== -->
+  <div id="modal-add-to-setlist" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="t-surface border t-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="px-6 py-4 border-b t-border flex items-center justify-between">
+        <h3 class="text-base font-bold t-text">Adicionar ao Setlist</h3>
+        <button onclick="closeAddToSetlistModal()" type="button" class="p-2 rounded-xl t-text-sec hover:t-text t-elevated-hover transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="modal-setlist-options" class="p-5 space-y-2.5 max-h-80 overflow-y-auto">
+        <!-- Lista renderizada via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: BACKUP PORTÁTIL ==================== -->
+  <div id="modal-backup" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="t-surface border t-border rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="px-6 py-4 border-b t-border flex items-center justify-between">
+        <h3 class="text-base font-bold t-text">Backup Portátil</h3>
+        <button onclick="closeBackupModal()" type="button" class="p-2 rounded-xl t-text-sec hover:t-text t-elevated-hover transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <p class="text-sm t-text-sec leading-relaxed">
+          Salve todo o seu repertório, PDFs e setlists em um único arquivo <code class="font-mono t-text">.json</code> para guardar na nuvem ou transferir para outro aparelho.
+        </p>
+
+        <button id="btn-export-json" type="button" class="w-full py-3.5 px-4 rounded-2xl t-btn-primary font-semibold text-sm flex items-center justify-center gap-2 transition active:scale-95">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Exportar Backup (.json)</span>
+        </button>
+
+        <label class="w-full py-3.5 px-4 rounded-2xl t-elevated t-elevated-hover border t-border t-text font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition active:scale-95">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <span>Restaurar Backup (.json)</span>
+          <input id="input-import-json" type="file" accept="application/json,.json" class="hidden" />
+        </label>
+
+        <!-- Status discreto de armazenamento offline dentro do modal de Backup -->
+        <div class="pt-3 border-t t-border flex items-center justify-between text-xs t-text-muted">
+          <span>Armazenamento local</span>
+          <span id="backup-storage-status" class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+            <span>IndexedDB ativo</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CONFIRMAÇÃO PERSONALIZADA ==================== -->
+  <div id="modal-confirm" class="hidden fixed inset-0 z-[65] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="t-surface border t-border rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+      <h3 id="confirm-title" class="text-base font-bold t-text">Confirmar</h3>
+      <p id="confirm-message" class="text-sm t-text-sec leading-relaxed">Deseja continuar?</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="confirm-cancel" type="button" class="px-4 py-2.5 rounded-2xl t-elevated t-elevated-hover t-text-sec text-sm font-semibold transition">Cancelar</button>
+        <button id="confirm-ok" type="button" class="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TELA DE VISUALIZAÇÃO ("ABRIR CIFRA") ==================== -->
+  <div id="stage-view" class="hidden fixed inset-0 z-50 t-stage-bg flex flex-col">
+    <!-- Barra Superior Discreta -->
+    <div class="shrink-0 t-floating border-b t-border px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="btn-exit-stage" type="button" class="px-3 py-2 rounded-2xl t-elevated t-elevated-hover border t-border t-text text-sm font-semibold flex items-center gap-1.5 shrink-0 transition active:scale-95" title="Voltar (Esc)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          <span>Voltar</span>
+        </button>
+
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h2 id="stage-song-title" class="text-sm sm:text-base font-bold t-text truncate">Título</h2>
+            <span id="stage-song-key-badge" class="px-2 py-0.5 rounded-lg t-elevated border t-border t-text text-xs font-mono font-bold shrink-0">G</span>
+          </div>
+          <div class="flex items-center gap-2 text-xs t-text-sec truncate">
+            <span id="stage-song-artist" class="truncate">Artista</span>
+            <span id="stage-song-tuning" class="hidden sm:inline font-mono t-text-muted">• E A D G B E</span>
+            <span id="stage-setlist-indicator" class="hidden font-semibold t-text shrink-0">• 1/2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações da Barra Superior (Aparência & Tela Cheia) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button id="btn-stage-theme" type="button" class="p-2.5 rounded-2xl t-elevated t-elevated-hover border t-border t-text-sec hover:t-text transition active:scale-95" title="Aparência e Cores">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3a9 9 0 100 18 2.5 2.5 0 002.5-2.5c0-.66-.25-1.26-.66-1.71a1.5 1.5 0 011.12-2.5h1.54A4.5 4.5 0 0021 9.79C21 6.04 16.97 3 12 3z" />
+            <circle cx="7.5" cy="10.5" r="1" fill="currentColor" />
+            <circle cx="10.5" cy="7.5" r="1" fill="currentColor" />
+            <circle cx="14.5" cy="7.5" r="1" fill="currentColor" />
+          </svg>
+        </button>
+
+        <button id="btn-fullscreen" type="button" class="p-2.5 rounded-2xl t-elevated t-elevated-hover border t-border t-text-sec hover:t-text transition active:scale-95" title="Tela Cheia">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área de Leitura / Rolagem -->
+    <div id="stage-scroll-container" class="flex-1 overflow-y-auto overflow-x-auto t-stage-bg relative">
+      <!-- Cifra em Texto -->
+      <div id="stage-text-container" class="hidden max-w-4xl mx-auto px-5 sm:px-10 pt-8 pb-[55vh] font-mono leading-relaxed select-text">
+        <!-- Renderizado via JS -->
+      </div>
+
+      <!-- Cifra em PDF Contínuo -->
+      <div id="stage-pdf-container" class="hidden max-w-4xl mx-auto px-2 sm:px-6 pt-5 pb-[55vh] flex flex-col items-center gap-3">
+        <!-- Canvases PDF.js -->
+      </div>
+
+      <!-- Loader PDF -->
+      <div id="stage-pdf-loader" class="hidden py-24 text-center t-text-sec">
+        <div class="w-7 h-7 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p class="text-sm font-medium">Carregando páginas do PDF...</p>
+      </div>
+    </div>
+
+    <!-- Barra Inferior Flutuante com Cantos Bem Arredondados -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-3xl pointer-events-none">
+      <div class="pointer-events-auto t-floating border t-border rounded-3xl shadow-2xl px-3 py-2.5 sm:px-4 sm:py-3 flex flex-wrap items-center justify-between gap-2">
+
+        <!-- Play / Pause + Velocidade (0.5 a 10) -->
+        <div class="flex items-center gap-2">
+          <button id="btn-stage-play" type="button" class="px-4 py-2.5 rounded-2xl t-btn-primary font-bold text-sm flex items-center gap-1.5 min-w-[96px] justify-center transition active:scale-95" title="Play/Pause (Espaço)">
+            <svg id="icon-play" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="icon-pause" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            <span id="label-play">Rolar</span>
+          </button>
+
+          <div class="flex items-center t-elevated border t-border rounded-2xl p-1 gap-0.5">
+            <button id="btn-speed-down" type="button" class="w-8 h-8 rounded-xl t-elevated-hover t-text font-bold text-base flex items-center justify-center active:scale-95" title="Diminuir velocidade">-</button>
+            <span id="label-speed" class="text-xs font-mono font-semibold t-text px-1.5 min-w-[44px] text-center">2.0x</span>
+            <button id="btn-speed-up" type="button" class="w-8 h-8 rounded-xl t-elevated-hover t-text font-bold text-base flex items-center justify-center active:scale-95" title="Aumentar velocidade">+</button>
+          </div>
+        </div>
+
+        <!-- Controles de Texto: Fonte e Tom -->
+        <div id="stage-text-controls" class="flex items-center gap-2">
+          <!-- Tamanho da Fonte -->
+          <div class="flex items-center t-elevated border t-border rounded-2xl p-1 gap-0.5">
+            <button id="btn-font-down" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Diminuir fonte">A-</button>
+            <button id="btn-font-up" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Aumentar fonte">A+</button>
+          </div>
+
+          <!-- Transposição de Tom -->
+          <div class="flex items-center t-elevated border t-border rounded-2xl p-1 gap-0.5">
+            <button id="btn-transpose-down" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Meio tom abaixo">Tom -</button>
+            <span id="label-transpose" class="text-xs font-mono font-bold t-text-sec px-1 min-w-[26px] text-center">0</span>
+            <button id="btn-transpose-up" type="button" class="px-2.5 py-1.5 rounded-xl t-elevated-hover t-text text-xs font-bold active:scale-95" title="Meio tom acima">Tom +</button>
+          </div>
+        </div>
+
+        <!-- Controle de PDF: Inverter Cores (Noturno) -->
+        <div id="stage-pdf-controls" class="hidden flex items-center">
+          <button id="btn-pdf-invert" type="button" class="px-3.5 py-2 rounded-2xl t-elevated t-elevated-hover border t-border t-text text-xs font-semibold flex items-center gap-1.5 transition active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            <span id="label-pdf-invert">Inverter Cores (Noturno)</span>
+          </button>
+        </div>
+
+        <!-- Navegação de Setlist (Anterior / Próxima) -->
+        <div id="stage-setlist-nav" class="hidden flex items-center gap-1.5">
+          <button id="btn-stage-prev" type="button" class="px-3 py-2 rounded-2xl t-elevated t-elevated-hover border t-border t-text text-xs font-semibold flex items-center gap-1 disabled:opacity-30 transition active:scale-95" title="Música Anterior">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <span class="hidden sm:inline">Ant.</span>
+          </button>
+          <button id="btn-stage-next" type="button" class="px-3 py-2 rounded-2xl t-elevated t-elevated-hover border t-border t-text text-xs font-semibold flex items-center gap-1 disabled:opacity-30 transition active:scale-95" title="Próxima Música">
+            <span class="hidden sm:inline">Próx.</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOASTS DE NOTIFICAÇÃO ==================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[80] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== LÓGICA DA APLICAÇÃO ==================== -->
+  <script>
+    // =========================================================================
+    // CONFIGURAÇÃO PDF.JS
+    // =========================================================================
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // =========================================================================
+    // ESTADO GLOBAL
+    // =========================================================================
+    const PREFS_KEY = 'palco_aberto_prefs_v1';
+
+    const state = {
+      db: null,
+      musicas: [],
+      setlists: [],
+      activeTab: 'musicas',
+      searchQuery: '',
+      prefs: {
+        theme: 'pb',         // 'pb' | 'oled' | 'soft' | 'light'
+        chordColor: 'default' // 'default' ou hex '#38BDF8'
+      },
+      stage: {
+        active: false,
+        song: null,
+        setlist: null,
+        setlistIndex: 0,
+        transposeSteps: 0,
+        fontSize: 18,
+        speed: 2.0, // escala 0.5 a 10.0
+        pdfNightMode: true,
+        isScrolling: false,
+        rafId: null,
+        lastFrameTime: 0,
+        scrollAccumulator: 0,
+        userInteracting: false,
+        userInteractTimeout: null,
+        wakeLock: null,
+        saveTimeout: null,
+      },
+      pendingPdfBlob: null,
+      addToSetlistSongId: null,
+    };
+
+    // =========================================================================
+    // SISTEMA DE TEMAS & COR DOS ACORDES (localStorage + CSS Variables)
+    // =========================================================================
+    const THEME_META_COLORS = {
+      pb: '#0B0B0C',
+      oled: '#000000',
+      soft: '#16181D',
+      light: '#F6F7F9',
+    };
+
+    function loadAppearancePrefs() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PREFS_KEY));
+        if (saved) {
+          if (saved.theme && THEME_META_COLORS[saved.theme]) {
+            state.prefs.theme = saved.theme;
+          }
+          if (saved.chordColor) {
+            state.prefs.chordColor = saved.chordColor;
+          }
+        }
+      } catch (e) {
+        // Ignora erro de leitura do localStorage
+      }
+      applyAppearancePrefs();
+    }
+
+    function saveAppearancePrefs() {
+      try {
+        localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs));
+      } catch (e) {}
+    }
+
+    function applyAppearancePrefs() {
+      const root = document.documentElement;
+      root.setAttribute('data-theme', state.prefs.theme);
+
+      const metaTheme = document.getElementById('meta-theme-color');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', THEME_META_COLORS[state.prefs.theme] || '#0B0B0C');
+      }
+
+      if (state.prefs.chordColor === 'default') {
+        root.style.setProperty('--chord-active', 'var(--chord-default)');
+      } else {
+        root.style.setProperty('--chord-active', state.prefs.chordColor);
+      }
+
+      syncThemeModalUI();
+    }
+
+    function syncThemeModalUI() {
+      // Marca tema ativo
+      document.querySelectorAll('.theme-choice-btn').forEach((btn) => {
+        const isSelected = btn.getAttribute('data-theme-choice') === state.prefs.theme;
+        if (isSelected) {
+          btn.style.borderColor = 'var(--text-primary)';
+          btn.style.backgroundColor = 'var(--surface-elevated)';
+        } else {
+          btn.style.borderColor = 'var(--border)';
+          btn.style.backgroundColor = 'transparent';
+        }
+      });
+
+      // Marca swatch de acorde ativo
+      const label = document.getElementById('chord-color-label');
+      if (label) {
+        label.textContent = state.prefs.chordColor === 'default' ? 'Padrão' : state.prefs.chordColor.toUpperCase();
+      }
+
+      document.querySelectorAll('.chord-swatch').forEach((btn) => {
+        const color = btn.getAttribute('data-chord-color');
+        const isSelected = color.toLowerCase() === state.prefs.chordColor.toLowerCase();
+        btn.style.borderColor = isSelected ? 'var(--text-primary)' : 'transparent';
+        btn.style.backgroundColor = isSelected ? 'var(--surface-elevated)' : 'transparent';
+      });
+
+      const customInput = document.getElementById('input-custom-chord-color');
+      if (customInput && state.prefs.chordColor !== 'default') {
+        customInput.value = state.prefs.chordColor;
+      }
+    }
+
+    function openThemeModal() {
+      syncThemeModalUI();
+      document.getElementById('modal-theme').classList.remove('hidden');
+    }
+
+    function closeThemeModal() {
+      document.getElementById('modal-theme').classList.add('hidden');
+    }
+
+    document.getElementById('btn-open-theme').addEventListener('click', openThemeModal);
+    document.getElementById('btn-stage-theme').addEventListener('click', openThemeModal);
+
+    document.querySelectorAll('.theme-choice-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.prefs.theme = btn.getAttribute('data-theme-choice');
+        applyAppearancePrefs();
+        saveAppearancePrefs();
+      });
+    });
+
+    document.querySelectorAll('.chord-swatch').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.prefs.chordColor = btn.getAttribute('data-chord-color');
+        applyAppearancePrefs();
+        saveAppearancePrefs();
+      });
+    });
+
+    document.getElementById('input-custom-chord-color').addEventListener('input', (e) => {
+      state.prefs.chordColor = e.target.value;
+      applyAppearancePrefs();
+      saveAppearancePrefs();
+    });
+
+    // =========================================================================
+    // BANCO DE DADOS OFFLINE (INDEXEDDB: PalcoAbertoDB)
+    // =========================================================================
+    const DB_NAME = 'PalcoAbertoDB';
+    const DB_VERSION = 1;
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('musicas')) {
+            db.createObjectStore('musicas', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('setlists')) {
+            db.createObjectStore('setlists', { keyPath: 'id' });
+          }
+        };
+
+        request.onsuccess = (event) => {
+          state.db = event.target.result;
+          resolve(state.db);
+        };
+
+        request.onerror = (event) => reject(event.target.error);
+      });
+    }
+
+    function dbGetAll(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = state.db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function dbPut(storeName, item) {
+      return new Promise((resolve, reject) => {
+        const tx = state.db.transaction(storeName, 'readwrite');
+        const req = tx.objectStore(storeName).put(item);
+        req.onsuccess = () => resolve(item);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function dbDelete(storeName, id) {
+      return new Promise((resolve, reject) => {
+        const tx = state.db.transaction(storeName, 'readwrite');
+        const req = tx.objectStore(storeName).delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function generateId(prefix = 'id') {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    }
+
+    async function checkStoragePersistence() {
+      const statusEl = document.getElementById('backup-storage-status');
+      try {
+        let isPersisted = false;
+        if (navigator.storage && navigator.storage.persisted) {
+          isPersisted = await navigator.storage.persisted();
+          if (!isPersisted && navigator.storage.persist) {
+            isPersisted = await navigator.storage.persist();
+          }
+        }
+        if (statusEl) {
+          statusEl.innerHTML = isPersisted
+            ? `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span><span>Offline persistente</span>`
+            : `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span><span>Offline (IndexedDB)</span>`;
+        }
+      } catch (err) {
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span><span>Offline (IndexedDB)</span>`;
+        }
+      }
+    }
+
+    // =========================================================================
+    // DADOS INICIAIS (DOMÍNIO PÚBLICO)
+    // =========================================================================
+    async function seedInitialDataIfEmpty() {
+      const existingSongs = await dbGetAll('musicas');
+      if (existingSongs.length > 0) return;
+
+      const song1Id = generateId('mus');
+      const song2Id = generateId('mus');
+
+      const luarDoSertao = {
+        id: song1Id,
+        titulo: 'Luar do Sertão',
+        artista: 'Catulo da Paixão Cearense',
+        tom: 'G',
+        afinacao: 'E A D G B E',
+        tipo: 'texto',
+        conteudoTexto: `[Intro] G  D7  G  D7
+
+[Refrão]
+G             D7           G
+Não há, ó gente, ó não
+             E7           Am
+Luar como este do sertão
+D7                        G
+Não há, ó gente, ó não
+   E7     Am   D7         G
+Luar como este do sertão
+
+[Primeira Parte]
+G                          B7
+Oh! Que saudade do luar da minha terra
+                       Em
+Lá na serra branquejando
+       A7                D7
+Folhas secas pelo chão
+G                          G7
+Este luar cá da cidade tão escuro
+        C             Cm
+Não tem aquela saudade
+       G    D7     G
+Do luar lá do sertão
+
+[Refrão]
+G             D7           G
+Não há, ó gente, ó não
+             E7           Am
+Luar como este do sertão
+D7                        G
+Não há, ó gente, ó não
+   E7     Am   D7         G
+Luar como este do sertão
+
+[Segunda Parte]
+G                          B7
+Se a lua nasce por detrás da verde mata
+                         Em
+Mais parece um sol de prata
+        A7               D7
+Prateando a solidão
+G                          G7
+E a gente pega na viola que ponteia
+        C             Cm
+E a canção e a lua cheia
+       G    D7     G
+A nos nascer no coração`,
+        arquivoPdfBlob: null,
+        velocidade: 1.5,
+        tamanhoFonte: 18,
+        tags: ['MPB', 'Domínio Público', 'Voz e Violão'],
+        criadoEm: Date.now() - 2000,
+      };
+
+      const comQueRoupa = {
+        id: song2Id,
+        titulo: 'Com Que Roupa?',
+        artista: 'Noel Rosa',
+        tom: 'C',
+        afinacao: 'E A D G B E',
+        tipo: 'texto',
+        conteudoTexto: `[Intro] C  A7  Dm  G7  C  G7
+
+[Primeira Parte]
+C                      A7
+Agora vou mudar minha conduta
+Dm                     G7
+Eu vou pra luta pois eu quero me aprumar
+Dm                     G7
+Vou tratar você com a força bruta
+C                      G7
+Pra poder me reabilitar
+
+C                      C7
+Pois esta vida não está sopa
+F                      Fm
+E eu pergunto: com que roupa?
+C          A7       Dm
+Com que roupa que eu vou
+       G7           C     G7
+Pro samba que você me convidou?
+
+[Segunda Parte]
+C                      A7
+Agora eu não ando mais fagueiro
+Dm                     G7
+Pois o dinheiro não é fácil de ganhar
+Dm                     G7
+Mesmo eu sendo um cabra trapaceiro
+C                      G7
+Não consigo ter nem pra gastar
+
+C                      C7
+Eu já corri de vento em popa
+F                      Fm
+Mas agora com que roupa?
+C          A7       Dm
+Com que roupa que eu vou
+       G7           C     G7
+Pro samba que você me convidou?
+
+[Terceira Parte]
+C                      A7
+Eu hoje estou pulando como sapo
+Dm                     G7
+Pra ver se escapo desta praga de urubu
+Dm                     G7
+Já estou coberto de farrapo
+C                      G7
+Eu vou acabar ficando nu
+
+C                      C7
+Meu paletó virou estopa
+F                      Fm
+E eu já nem sei mais com que roupa
+C          A7       Dm
+Com que roupa que eu vou
+       G7           C
+Pro samba que você me convidou?`,
+        arquivoPdfBlob: null,
+        velocidade: 2.0,
+        tamanhoFonte: 18,
+        tags: ['Samba', 'Domínio Público', 'Bar'],
+        criadoEm: Date.now() - 1000,
+      };
+
+      const setlistTeste = {
+        id: generateId('set'),
+        nome: 'Show de Teste',
+        musicasIds: [song1Id, song2Id],
+      };
+
+      await dbPut('musicas', luarDoSertao);
+      await dbPut('musicas', comQueRoupa);
+      await dbPut('setlists', setlistTeste);
+    }
+
+    async function refreshDataFromDB() {
+      const [musicas, setlists] = await Promise.all([
+        dbGetAll('musicas'),
+        dbGetAll('setlists'),
+      ]);
+      state.musicas = musicas.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+      state.setlists = setlists;
+      renderAll();
+    }
+
+    // =========================================================================
+    // SMART PASTE, DETECÇÃO DE ACORDES E TRANSPOSIÇÃO EM TEMPO REAL
+    // =========================================================================
+    const NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const NOTES_FLAT  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const FLAT_KEYS   = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm'];
+
+    const CHORD_TOKEN_REGEX = /^[A-G](#|b)?(m|maj|min|dim|aug|sus|add|M)?[0-9]*([+°º-]?)(M|m|dim|aug|sus|add)?[0-9]*(\([#b0-9a-zA-Z,/+-]+\))*(\/[A-G](#|b)?[0-9]*)?$/;
+    const IGNORED_CHORD_LINE_TOKENS = /^(\(?\d+x\)?|\||-|–|—|\/|\.{2,}|\[.*\]|Intro:?|Solo:?|Riff:?|Base:?)$/i;
+
+    function cleanSmartPasteText(raw) {
+      return (raw || '')
+        .replace(/\r\n/g, '\n')
+        .replace(/\t/g, '    ')
+        .split('\n')
+        .map((line) => line.replace(/[ \t]+$/g, '')) // remove espaços à direita
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n') // no máximo 1 linha vazia seguida
+        .trim();
+    }
+
+    function isChordToken(token) {
+      if (!token) return false;
+      const clean = token.replace(/^[(\[]+|[)\],.;:]+$/g, '');
+      if (!clean) return false;
+      return CHORD_TOKEN_REGEX.test(clean);
+    }
+
+    function isChordLine(line) {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      if (/^\[[^\]]+\]$/.test(trimmed)) return false;
+
+      const tokens = trimmed.split(/\s+/);
+      let chordCount = 0;
+      let wordCount = 0;
+
+      for (const tok of tokens) {
+        if (IGNORED_CHORD_LINE_TOKENS.test(tok)) continue;
+        if (isChordToken(tok)) {
+          chordCount++;
+        } else {
+          wordCount++;
+        }
+      }
+
+      if (chordCount === 0) return false;
+      return chordCount >= wordCount && (chordCount / (chordCount + wordCount)) >= 0.6;
+    }
+
+    function noteToIndex(note) {
+      let idx = NOTES_SHARP.indexOf(note);
+      if (idx !== -1) return idx;
+      return NOTES_FLAT.indexOf(note);
+    }
+
+    function transposeNote(note, semitones, useFlats) {
+      const idx = noteToIndex(note);
+      if (idx === -1) return note;
+      const nextIdx = ((idx + semitones) % 12 + 12) % 12;
+      return useFlats ? NOTES_FLAT[nextIdx] : NOTES_SHARP[nextIdx];
+    }
+
+    function transposeChord(chordStr, semitones, useFlats) {
+      if (semitones === 0) return chordStr;
+      return chordStr.replace(
+        /^([(\[]*)([A-G](?:#|b)?)(.*?)(\/([A-G](?:#|b)?))?([)\],.;:]*)$/,
+        (match, pre, root, middle, slashPart, bass, post) => {
+          const newRoot = transposeNote(root, semitones, useFlats);
+          let newSlash = '';
+          if (bass) {
+            newSlash = '/' + transposeNote(bass, semitones, useFlats);
+          } else if (slashPart) {
+            newSlash = slashPart;
+          }
+          return `${pre}${newRoot}${middle}${newSlash}${post}`;
+        }
+      );
+    }
+
+    function getTransposedKey(originalKey, semitones) {
+      if (!originalKey) return '';
+      const clean = originalKey.trim();
+      const match = clean.match(/^([A-G](?:#|b)?)(.*)$/);
+      if (!match) return clean;
+      const root = match[1];
+      const suffix = match[2];
+      const useFlats = FLAT_KEYS.includes(transposeNote(root, semitones, true) + suffix);
+      return transposeNote(root, semitones, useFlats) + suffix;
+    }
+
+    function escapeHtml(str) {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function formatChordLineHtml(line, semitones, useFlats) {
+      const parts = line.split(/(\s+)/);
+      let carrySpaceAdjustment = 0;
+      let html = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (!part) continue;
+
+        if (/^\s+$/.test(part)) {
+          let spaces = part;
+          if (carrySpaceAdjustment > 0 && spaces.length > 1) {
+            const removeCount = Math.min(carrySpaceAdjustment, spaces.length - 1);
+            spaces = spaces.slice(removeCount);
+            carrySpaceAdjustment -= removeCount;
+          } else if (carrySpaceAdjustment < 0) {
+            spaces = spaces + ' '.repeat(Math.abs(carrySpaceAdjustment));
+            carrySpaceAdjustment = 0;
+          }
+          html += spaces;
+        } else if (isChordToken(part)) {
+          const transposed = transposeChord(part, semitones, useFlats);
+          carrySpaceAdjustment += (transposed.length - part.length);
+          html += `<span class="chord-token">${escapeHtml(transposed)}</span>`;
+        } else {
+          html += `<span class="t-text-muted font-semibold">${escapeHtml(part)}</span>`;
+        }
+      }
+      return html;
+    }
+
+    function renderChordSheetHtml(rawText, semitones, originalKey) {
+      const targetKey = getTransposedKey(originalKey, semitones);
+      const useFlats = FLAT_KEYS.includes(targetKey);
+      const lines = (rawText || '').replace(/\r\n/g, '\n').split('\n');
+
+      return lines.map((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return `<div class="h-4"></div>`;
+        }
+        if (/^\[[^\]]+\]$/.test(trimmed)) {
+          return `<div class="mt-5 mb-1.5 text-[0.72em] uppercase tracking-widest font-sans font-semibold t-text-muted">${escapeHtml(trimmed)}</div>`;
+        }
+        if (isChordLine(line)) {
+          return `<div class="whitespace-pre leading-snug mb-0.5">${formatChordLineHtml(line, semitones, useFlats)}</div>`;
+        }
+        return `<div class="whitespace-pre lyric-line leading-snug mb-1.5">${escapeHtml(line)}</div>`;
+      }).join('');
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO: MÚSICAS & SETLISTS
+    // =========================================================================
+    function renderAll() {
+      document.getElementById('count-musicas').textContent = state.musicas.length;
+      document.getElementById('count-setlists').textContent = state.setlists.length;
+      renderMusicas();
+      renderSetlists();
+    }
+
+    function renderMusicas() {
+      const container = document.getElementById('songs-list');
+      const emptyEl = document.getElementById('songs-empty');
+      const q = state.searchQuery.trim().toLowerCase();
+
+      const filtered = state.musicas.filter((m) => {
+        if (!q) return true;
+        const inTitle = (m.titulo || '').toLowerCase().includes(q);
+        const inArtist = (m.artista || '').toLowerCase().includes(q);
+        const inKey = (m.tom || '').toLowerCase().includes(q);
+        const inTags = (m.tags || []).some((t) => t.toLowerCase().includes(q));
+        return inTitle || inArtist || inKey || inTags;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      container.innerHTML = filtered.map((m) => {
+        const tipoBadge = m.tipo === 'pdf'
+          ? `<span class="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold t-elevated border t-border t-text-sec">PDF</span>`
+          : `<span class="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold t-elevated border t-border t-text-sec">Texto</span>`;
+
+        const keyBadge = m.tom
+          ? `<span class="px-2.5 py-0.5 rounded-lg text-[11px] font-mono font-bold t-elevated border t-border t-text">${escapeHtml(m.tom)}</span>`
+          : '';
+
+        const tagsHtml = (m.tags || []).slice(0, 3).map((tag) =>
+          `<span class="px-2.5 py-0.5 rounded-lg text-[11px] t-bg border t-border t-text-muted">${escapeHtml(tag)}</span>`
+        ).join('');
+
+        return `
+          <div class="t-surface border t-border rounded-3xl p-5 flex flex-col justify-between gap-4 transition hover:shadow-lg">
+            <div>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <h3 class="text-base sm:text-lg font-bold t-text truncate">${escapeHtml(m.titulo)}</h3>
+                  <p class="text-sm t-text-sec truncate mt-0.5">${escapeHtml(m.artista || 'Artista desconhecido')}</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  ${keyBadge}
+                  ${tipoBadge}
+                </div>
+              </div>
+              ${tagsHtml ? `<div class="flex flex-wrap gap-1.5 mt-3.5">${tagsHtml}</div>` : ''}
+            </div>
+
+            <div class="flex items-center gap-2 pt-3 border-t t-border">
+              <button onclick="openCifraView('${m.id}')" type="button" class="flex-1 py-2.5 px-4 rounded-2xl t-btn-primary font-semibold text-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <span>Abrir Cifra</span>
+              </button>
+
+              <button onclick="openAddToSetlistModal('${m.id}')" type="button" class="p-2.5 rounded-2xl t-elevated t-elevated-hover border t-border t-text-sec hover:t-text transition active:scale-95" title="Adicionar ao Setlist">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+              </button>
+
+              <button onclick="openSongModal('${m.id}')" type="button" class="p-2.5 rounded-2xl t-elevated t-elevated-hover border t-border t-text-sec hover:t-text transition active:scale-95" title="Editar">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+
+              <button onclick="confirmDeleteSong('${m.id}')" type="button" class="p-2.5 rounded-2xl t-elevated hover:bg-red-500/15 border t-border t-text-muted hover:text-red-400 transition active:scale-95" title="Excluir">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSetlists() {
+      const container = document.getElementById('setlists-container');
+      const emptyEl = document.getElementById('setlists-empty');
+
+      if (state.setlists.length === 0) {
+        container.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      container.innerHTML = state.setlists.map((sl) => {
+        const validSongs = (sl.musicasIds || [])
+          .map((id) => state.musicas.find((m) => m.id === id))
+          .filter(Boolean);
+
+        const availableOptions = state.musicas.map((m) =>
+          `<option value="${m.id}">${escapeHtml(m.titulo)} — ${escapeHtml(m.artista || 'Sem artista')}</option>`
+        ).join('');
+
+        const songsListHtml = validSongs.length === 0
+          ? `<p class="text-sm t-text-muted py-4 text-center">Setlist vazio. Adicione músicas abaixo.</p>`
+          : validSongs.map((m, idx) => `
+              <div class="flex items-center justify-between gap-2 p-3 rounded-2xl t-bg border t-border">
+                <div class="flex items-center gap-3 min-w-0 cursor-pointer flex-1" onclick="openCifraView('${m.id}', '${sl.id}', ${idx})">
+                  <span class="w-6 h-6 rounded-xl t-elevated t-text text-xs font-mono font-bold flex items-center justify-center shrink-0">${idx + 1}</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold t-text truncate">${escapeHtml(m.titulo)}</p>
+                    <p class="text-xs t-text-sec truncate">${escapeHtml(m.artista || '')}${m.tom ? ' • ' + escapeHtml(m.tom) : ''}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="moveSongInSetlist('${sl.id}', ${idx}, -1)" ${idx === 0 ? 'disabled' : ''} type="button" class="p-2 rounded-xl t-surface t-elevated-hover t-text-sec disabled:opacity-25 transition" title="Subir">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+                  </button>
+                  <button onclick="moveSongInSetlist('${sl.id}', ${idx}, 1)" ${idx === validSongs.length - 1 ? 'disabled' : ''} type="button" class="p-2 rounded-xl t-surface t-elevated-hover t-text-sec disabled:opacity-25 transition" title="Descer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                  <button onclick="removeSongFromSetlist('${sl.id}', ${idx})" type="button" class="p-2 rounded-xl t-surface hover:bg-red-500/15 t-text-muted hover:text-red-400 transition" title="Remover">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+            `).join('');
+
+        return `
+          <div class="t-surface border t-border rounded-3xl p-5 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-bold t-text">${escapeHtml(sl.nome)}</h3>
+                <p class="text-xs t-text-sec mt-0.5">${validSongs.length} ${validSongs.length === 1 ? 'música' : 'músicas'}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="startShowFromSetlist('${sl.id}')" ${validSongs.length === 0 ? 'disabled' : ''} type="button" class="px-4 py-2.5 rounded-2xl t-btn-primary disabled:opacity-40 font-semibold text-sm flex items-center gap-1.5 transition active:scale-95">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  <span>Abrir Cifra</span>
+                </button>
+                <button onclick="confirmDeleteSetlist('${sl.id}')" type="button" class="p-2.5 rounded-2xl t-elevated hover:bg-red-500/15 border t-border t-text-muted hover:text-red-400 transition" title="Excluir Setlist">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              ${songsListHtml}
+            </div>
+
+            <div class="flex gap-2 pt-3 border-t t-border">
+              <select id="select-add-${sl.id}" class="flex-1 px-3.5 py-2.5 rounded-2xl t-input text-sm">
+                <option value="">+ Adicionar música da biblioteca...</option>
+                ${availableOptions}
+              </select>
+              <button onclick="addSelectedSongToSetlist('${sl.id}')" type="button" class="px-4 py-2.5 rounded-2xl t-elevated t-elevated-hover border t-border t-text font-semibold text-sm transition shrink-0">
+                Adicionar
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // CRUD DE MÚSICAS
+    // =========================================================================
+    function openSongModal(songId = null) {
+      const modal = document.getElementById('modal-song');
+      const form = document.getElementById('form-song');
+      form.reset();
+      state.pendingPdfBlob = null;
+      document.getElementById('pdf-filename-label').textContent = 'Toque para escolher um arquivo .PDF';
+      document.getElementById('song-afinacao').value = 'E A D G B E';
+
+      if (songId) {
+        const song = state.musicas.find((m) => m.id === songId);
+        if (!song) return;
+        document.getElementById('modal-song-title').textContent = 'Editar Música';
+        document.getElementById('song-id').value = song.id;
+        document.getElementById('song-titulo').value = song.titulo || '';
+        document.getElementById('song-artista').value = song.artista || '';
+        document.getElementById('song-tom').value = song.tom || '';
+        document.getElementById('song-afinacao').value = song.afinacao || 'E A D G B E';
+        document.getElementById('song-tags').value = (song.tags || []).join(', ');
+        document.getElementById('song-conteudo').value = song.conteudoTexto || '';
+        switchSongModalType(song.tipo || 'texto');
+        if (song.tipo === 'pdf') {
+          document.getElementById('pdf-filename-label').textContent = 'PDF já salvo (toque apenas para substituir)';
+        }
+      } else {
+        document.getElementById('modal-song-title').textContent = 'Nova Música';
+        document.getElementById('song-id').value = '';
+        switchSongModalType('texto');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeSongModal() {
+      document.getElementById('modal-song').classList.add('hidden');
+      state.pendingPdfBlob = null;
+    }
+
+    function switchSongModalType(tipo) {
+      document.getElementById('song-tipo').value = tipo;
+      const btnTexto = document.getElementById('btn-type-texto');
+      const btnPdf = document.getElementById('btn-type-pdf');
+      const fieldTexto = document.getElementById('field-texto-content');
+      const fieldPdf = document.getElementById('field-pdf-upload');
+
+      if (tipo === 'pdf') {
+        btnPdf.className = 'py-2 rounded-xl text-sm font-semibold transition t-btn-primary';
+        btnTexto.className = 'py-2 rounded-xl text-sm font-semibold transition t-text-sec hover:t-text';
+        fieldPdf.classList.remove('hidden');
+        fieldTexto.classList.add('hidden');
+      } else {
+        btnTexto.className = 'py-2 rounded-xl text-sm font-semibold transition t-btn-primary';
+        btnPdf.className = 'py-2 rounded-xl text-sm font-semibold transition t-text-sec hover:t-text';
+        fieldTexto.classList.remove('hidden');
+        fieldPdf.classList.add('hidden');
+      }
+    }
+
+    // Smart Paste automático ao colar na textarea
+    document.getElementById('song-conteudo').addEventListener('paste', () => {
+      setTimeout(() => {
+        const el = document.getElementById('song-conteudo');
+        el.value = cleanSmartPasteText(el.value);
+      }, 0);
+    });
+
+    document.getElementById('btn-clean-paste').addEventListener('click', () => {
+      const el = document.getElementById('song-conteudo');
+      el.value = cleanSmartPasteText(el.value);
+      showToast('Espaços extras removidos.');
+    });
+
+    document.getElementById('song-pdf-file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      state.pendingPdfBlob = file;
+      const sizeKb = Math.round(file.size / 1024);
+      document.getElementById('pdf-filename-label').textContent = `${file.name} (${sizeKb} KB)`;
+
+      const tituloInput = document.getElementById('song-titulo');
+      if (!tituloInput.value.trim()) {
+        tituloInput.value = file.name.replace(/\.pdf$/i, '').replace(/[_]+/g, ' ').trim();
+      }
+    });
+
+    document.getElementById('form-song').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('song-id').value || generateId('mus');
+      const existing = state.musicas.find((m) => m.id === id);
+      const tipo = document.getElementById('song-tipo').value;
+      const titulo = document.getElementById('song-titulo').value.trim();
+      const artista = document.getElementById('song-artista').value.trim();
+      const tom = document.getElementById('song-tom').value.trim();
+      const afinacao = document.getElementById('song-afinacao').value.trim() || 'E A D G B E';
+      const tags = document.getElementById('song-tags').value
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const conteudoTexto = cleanSmartPasteText(document.getElementById('song-conteudo').value);
+
+      if (!titulo) {
+        showToast('Informe o título da música.', 'error');
+        return;
+      }
+
+      let arquivoPdfBlob = existing ? existing.arquivoPdfBlob : null;
+      if (tipo === 'pdf') {
+        if (state.pendingPdfBlob) {
+          arquivoPdfBlob = state.pendingPdfBlob;
+        } else if (!arquivoPdfBlob) {
+          showToast('Selecione um arquivo PDF.', 'error');
+          return;
+        }
+      }
+
+      const songObj = {
+        id,
+        titulo,
+        artista,
+        tom,
+        afinacao,
+        tipo,
+        conteudoTexto: tipo === 'texto' ? conteudoTexto : '',
+        arquivoPdfBlob: tipo === 'pdf' ? arquivoPdfBlob : null,
+        velocidade: existing ? existing.velocidade : 2.0,
+        tamanhoFonte: existing ? existing.tamanhoFonte : 18,
+        tags,
+        criadoEm: existing ? existing.criadoEm : Date.now(),
+      };
+
+      try {
+        await dbPut('musicas', songObj);
+        await refreshDataFromDB();
+        closeSongModal();
+        showToast(existing ? 'Música atualizada.' : 'Música salva.');
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao salvar música.', 'error');
+      }
+    });
+
+    function confirmDeleteSong(songId) {
+      const song = state.musicas.find((m) => m.id === songId);
+      if (!song) return;
+      showConfirmModal(
+        'Excluir Música',
+        `Deseja excluir "${song.titulo}"? Ela também será removida dos setlists.`,
+        async () => {
+          await dbDelete('musicas', songId);
+          for (const sl of state.setlists) {
+            if (sl.musicasIds && sl.musicasIds.includes(songId)) {
+              sl.musicasIds = sl.musicasIds.filter((id) => id !== songId);
+              await dbPut('setlists', sl);
+            }
+          }
+          await refreshDataFromDB();
+          showToast('Música excluída.');
+        }
+      );
+    }
+
+    // =========================================================================
+    // CRUD DE SETLISTS
+    // =========================================================================
+    document.getElementById('form-new-setlist').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('input-setlist-name');
+      const nome = input.value.trim();
+      if (!nome) return;
+
+      await dbPut('setlists', {
+        id: generateId('set'),
+        nome,
+        musicasIds: [],
+      });
+      input.value = '';
+      await refreshDataFromDB();
+      showToast(`Setlist "${nome}" criado.`);
+    });
+
+    function confirmDeleteSetlist(setlistId) {
+      const sl = state.setlists.find((s) => s.id === setlistId);
+      if (!sl) return;
+      showConfirmModal(
+        'Excluir Setlist',
+        `Excluir o setlist "${sl.nome}"? As músicas continuarão salvas na biblioteca.`,
+        async () => {
+          await dbDelete('setlists', setlistId);
+          await refreshDataFromDB();
+          showToast('Setlist excluído.');
+        }
+      );
+    }
+
+    async function addSelectedSongToSetlist(setlistId) {
+      const select = document.getElementById(`select-add-${setlistId}`);
+      const songId = select.value;
+      if (!songId) return;
+      const sl = state.setlists.find((s) => s.id === setlistId);
+      if (!sl) return;
+      sl.musicasIds = sl.musicasIds || [];
+      sl.musicasIds.push(songId);
+      await dbPut('setlists', sl);
+      await refreshDataFromDB();
+      showToast('Música adicionada ao setlist.');
+    }
+
+    async function moveSongInSetlist(setlistId, index, direction) {
+      const sl = state.setlists.find((s) => s.id === setlistId);
+      if (!sl) return;
+      const targetIdx = index + direction;
+      if (targetIdx < 0 || targetIdx >= sl.musicasIds.length) return;
+      const temp = sl.musicasIds[index];
+      sl.musicasIds[index] = sl.musicasIds[targetIdx];
+      sl.musicasIds[targetIdx] = temp;
+      await dbPut('setlists', sl);
+      await refreshDataFromDB();
+    }
+
+    async function removeSongFromSetlist(setlistId, index) {
+      const sl = state.setlists.find((s) => s.id === setlistId);
+      if (!sl) return;
+      sl.musicasIds.splice(index, 1);
+      await dbPut('setlists', sl);
+      await refreshDataFromDB();
+    }
+
+    function openAddToSetlistModal(songId) {
+      state.addToSetlistSongId = songId;
+      const container = document.getElementById('modal-setlist-options');
+      if (state.setlists.length === 0) {
+        container.innerHTML = `<p class="text-sm t-text-sec text-center py-4">Nenhum setlist criado. Crie um na aba Setlists.</p>`;
+      } else {
+        container.innerHTML = state.setlists.map((sl) => `
+          <button onclick="addSongFromModalToSetlist('${sl.id}')" type="button" class="w-full text-left px-4 py-3 rounded-2xl t-bg t-elevated-hover border t-border flex items-center justify-between transition">
+            <span class="font-semibold t-text text-sm">${escapeHtml(sl.nome)}</span>
+            <span class="text-xs t-text-sec font-medium">+ Adicionar</span>
+          </button>
+        `).join('');
+      }
+      document.getElementById('modal-add-to-setlist').classList.remove('hidden');
+    }
+
+    function closeAddToSetlistModal() {
+      document.getElementById('modal-add-to-setlist').classList.add('hidden');
+      state.addToSetlistSongId = null;
+    }
+
+    async function addSongFromModalToSetlist(setlistId) {
+      if (!state.addToSetlistSongId) return;
+      const sl = state.setlists.find((s) => s.id === setlistId);
+      if (!sl) return;
+      sl.musicasIds = sl.musicasIds || [];
+      sl.musicasIds.push(state.addToSetlistSongId);
+      await dbPut('setlists', sl);
+      await refreshDataFromDB();
+      closeAddToSetlistModal();
+      showToast(`Adicionada em "${sl.nome}".`);
+    }
+
+    function startShowFromSetlist(setlistId) {
+      const sl = state.setlists.find((s) => s.id === setlistId);
+      if (!sl || !sl.musicasIds || sl.musicasIds.length === 0) return;
+      const validIds = sl.musicasIds.filter((id) => state.musicas.some((m) => m.id === id));
+      if (validIds.length === 0) return;
+      openCifraView(validIds[0], sl.id, 0);
+    }
+
+    // =========================================================================
+    // TELA DE VISUALIZAÇÃO ("ABRIR CIFRA") + AUTO-SCROLL + PDF.JS + WAKE LOCK
+    // =========================================================================
+    async function openCifraView(songId, setlistId = null, setlistIndex = 0) {
+      const song = state.musicas.find((m) => m.id === songId);
+      if (!song) return;
+
+      stopAutoScroll();
+
+      state.stage.active = true;
+      state.stage.song = song;
+      state.stage.setlist = setlistId ? state.setlists.find((s) => s.id === setlistId) : null;
+      state.stage.setlistIndex = setlistIndex;
+      state.stage.transposeSteps = 0;
+      state.stage.fontSize = song.tamanhoFonte || 18;
+      // Garante velocidade dentro da escala 0.5 a 10.0
+      const savedSpeed = typeof song.velocidade === 'number' ? song.velocidade : 2.0;
+      state.stage.speed = Math.min(10, Math.max(0.5, savedSpeed));
+
+      // Cabeçalho da Cifra
+      document.getElementById('stage-song-title').textContent = song.titulo;
+      document.getElementById('stage-song-artist').textContent = song.artista || 'Artista desconhecido';
+      const tuningEl = document.getElementById('stage-song-tuning');
+      if (song.afinacao) {
+        tuningEl.textContent = `• ${song.afinacao}`;
+        tuningEl.classList.remove('hidden');
+      } else {
+        tuningEl.classList.add('hidden');
+      }
+      updateStageKeyBadge();
+
+      document.getElementById('label-speed').textContent = `${state.stage.speed.toFixed(1)}x`;
+      document.getElementById('label-transpose').textContent = '0';
+
+      // Indicador e Navegação de Setlist
+      const setlistIndicator = document.getElementById('stage-setlist-indicator');
+      const setlistNav = document.getElementById('stage-setlist-nav');
+      if (state.stage.setlist) {
+        const total = state.stage.setlist.musicasIds.length;
+        setlistIndicator.textContent = `• ${setlistIndex + 1}/${total}`;
+        setlistIndicator.classList.remove('hidden');
+        setlistNav.classList.remove('hidden');
+        document.getElementById('btn-stage-prev').disabled = setlistIndex <= 0;
+        document.getElementById('btn-stage-next').disabled = setlistIndex >= total - 1;
+      } else {
+        setlistIndicator.classList.add('hidden');
+        setlistNav.classList.add('hidden');
+      }
+
+      const scrollContainer = document.getElementById('stage-scroll-container');
+      scrollContainer.scrollTop = 0;
+      state.stage.scrollAccumulator = 0;
+
+      document.getElementById('stage-view').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      const textContainer = document.getElementById('stage-text-container');
+      const pdfContainer = document.getElementById('stage-pdf-container');
+      const textControls = document.getElementById('stage-text-controls');
+      const pdfControls = document.getElementById('stage-pdf-controls');
+
+      if (song.tipo === 'pdf') {
+        textContainer.classList.add('hidden');
+        textControls.classList.add('hidden');
+        pdfContainer.classList.remove('hidden');
+        pdfControls.classList.remove('hidden');
+        // No modo claro, PDF começa normal; nos modos escuros, começa invertido
+        state.stage.pdfNightMode = state.prefs.theme !== 'light';
+        updatePdfNightModeUI();
+        await renderPdfInStage(song.arquivoPdfBlob);
+      } else {
+        pdfContainer.classList.add('hidden');
+        pdfControls.classList.add('hidden');
+        textContainer.classList.remove('hidden');
+        textControls.classList.remove('hidden');
+        renderTextInStage();
+      }
+
+      requestWakeLock();
+    }
+
+    function closeCifraView() {
+      stopAutoScroll();
+      releaseWakeLock();
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+      state.stage.active = false;
+      state.stage.song = null;
+      document.getElementById('stage-view').classList.add('hidden');
+      document.getElementById('stage-pdf-container').innerHTML = '';
+      document.body.style.overflow = '';
+    }
+
+    function updateStageKeyBadge() {
+      const badge = document.getElementById('stage-song-key-badge');
+      const song = state.stage.song;
+      if (!song || !song.tom) {
+        badge.classList.add('hidden');
+        return;
+      }
+      badge.classList.remove('hidden');
+      badge.textContent = getTransposedKey(song.tom, state.stage.transposeSteps);
+    }
+
+    function renderTextInStage() {
+      const song = state.stage.song;
+      if (!song) return;
+      const container = document.getElementById('stage-text-container');
+      container.style.fontSize = `${state.stage.fontSize}px`;
+      container.innerHTML = renderChordSheetHtml(
+        song.conteudoTexto,
+        state.stage.transposeSteps,
+        song.tom
+      );
+    }
+
+    async function renderPdfInStage(pdfBlob) {
+      const container = document.getElementById('stage-pdf-container');
+      const loader = document.getElementById('stage-pdf-loader');
+      container.innerHTML = '';
+
+      if (!pdfBlob) {
+        container.innerHTML = `<p class="t-text-sec py-12">Arquivo PDF não encontrado.</p>`;
+        return;
+      }
+
+      if (!window.pdfjsLib) {
+        container.innerHTML = `<p class="text-red-400 py-12">Biblioteca PDF.js indisponível.</p>`;
+        return;
+      }
+
+      loader.classList.remove('hidden');
+      try {
+        const arrayBuffer = await pdfBlob.arrayBuffer();
+        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const containerWidth = Math.min(window.innerWidth - 24, 860);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+          const page = await pdfDoc.getPage(pageNum);
+          const unscaledViewport = page.getViewport({ scale: 1 });
+          const scale = containerWidth / unscaledViewport.width;
+          const viewport = page.getViewport({ scale });
+
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.floor(viewport.width * dpr);
+          canvas.height = Math.floor(viewport.height * dpr);
+          canvas.style.width = `${Math.floor(viewport.width)}px`;
+          canvas.style.height = `${Math.floor(viewport.height)}px`;
+          canvas.className = 'max-w-full h-auto rounded-2xl shadow-lg bg-white';
+
+          const ctx = canvas.getContext('2d');
+          ctx.scale(dpr, dpr);
+
+          container.appendChild(canvas);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+        }
+      } catch (err) {
+        console.error('Erro ao renderizar PDF:', err);
+        container.innerHTML = `<p class="text-red-400 py-12">Não foi possível abrir este arquivo PDF.</p>`;
+      } finally {
+        loader.classList.add('hidden');
+      }
+    }
+
+    function updatePdfNightModeUI() {
+      const container = document.getElementById('stage-pdf-container');
+      const label = document.getElementById('label-pdf-invert');
+      if (state.stage.pdfNightMode) {
+        container.classList.add('pdf-night-mode');
+        label.textContent = 'Noturno: ON';
+      } else {
+        container.classList.remove('pdf-night-mode');
+        label.textContent = 'Noturno: OFF';
+      }
+    }
+
+    // =========================================================================
+    // ROLAGEM SUAVE AUTOMÁTICA (SUB-PIXEL ACCUMULATOR)
+    // =========================================================================
+    function toggleAutoScroll() {
+      if (state.stage.isScrolling) {
+        stopAutoScroll();
+      } else {
+        startAutoScroll();
+      }
+    }
+
+    function startAutoScroll() {
+      if (state.stage.isScrolling) return;
+      state.stage.isScrolling = true;
+      state.stage.lastFrameTime = performance.now();
+      state.stage.scrollAccumulator = document.getElementById('stage-scroll-container').scrollTop;
+      updatePlayButtonUI();
+      state.stage.rafId = requestAnimationFrame(autoScrollStep);
+    }
+
+    function stopAutoScroll() {
+      state.stage.isScrolling = false;
+      if (state.stage.rafId) {
+        cancelAnimationFrame(state.stage.rafId);
+        state.stage.rafId = null;
+      }
+      updatePlayButtonUI();
+    }
+
+    function updatePlayButtonUI() {
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const label = document.getElementById('label-play');
+
+      if (state.stage.isScrolling) {
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+        label.textContent = 'Pausar';
+      } else {
+        iconPlay.classList.remove('hidden');
+        iconPause.classList.add('hidden');
+        label.textContent = 'Rolar';
+      }
+    }
+
+    function autoScrollStep(now) {
+      if (!state.stage.isScrolling) return;
+
+      const deltaSec = (now - state.stage.lastFrameTime) / 1000;
+      state.stage.lastFrameTime = now;
+
+      const container = document.getElementById('stage-scroll-container');
+
+      if (!state.stage.userInteracting) {
+        // Escala 0.5 a 10.0 convertida em pixels por segundo (7 px/s até 140 px/s)
+        const pxPerSec = state.stage.speed * 14;
+        state.stage.scrollAccumulator += pxPerSec * deltaSec;
+        const maxScroll = container.scrollHeight - container.clientHeight;
+
+        if (state.stage.scrollAccumulator >= maxScroll && maxScroll > 0) {
+          container.scrollTop = maxScroll;
+          stopAutoScroll();
+          return;
+        }
+        container.scrollTop = state.stage.scrollAccumulator;
+      } else {
+        state.stage.scrollAccumulator = container.scrollTop;
+      }
+
+      state.stage.rafId = requestAnimationFrame(autoScrollStep);
+    }
+
+    // Pausa momentânea se o músico deslizar a tela manualmente
+    const stageScrollEl = document.getElementById('stage-scroll-container');
+    function markUserScrolling() {
+      if (!state.stage.isScrolling) return;
+      state.stage.userInteracting = true;
+      state.stage.scrollAccumulator = stageScrollEl.scrollTop;
+      clearTimeout(state.stage.userInteractTimeout);
+      state.stage.userInteractTimeout = setTimeout(() => {
+        state.stage.scrollAccumulator = stageScrollEl.scrollTop;
+        state.stage.userInteracting = false;
+      }, 350);
+    }
+
+    stageScrollEl.addEventListener('wheel', markUserScrolling, { passive: true });
+    stageScrollEl.addEventListener('touchstart', () => {
+      if (state.stage.isScrolling) state.stage.userInteracting = true;
+    }, { passive: true });
+    stageScrollEl.addEventListener('touchmove', () => {
+      if (state.stage.isScrolling) state.stage.scrollAccumulator = stageScrollEl.scrollTop;
+    }, { passive: true });
+    stageScrollEl.addEventListener('touchend', markUserScrolling, { passive: true });
+
+    function scheduleSaveSongPrefs() {
+      if (!state.stage.song) return;
+      state.stage.song.velocidade = state.stage.speed;
+      state.stage.song.tamanhoFonte = state.stage.fontSize;
+      clearTimeout(state.stage.saveTimeout);
+      state.stage.saveTimeout = setTimeout(async () => {
+        try {
+          await dbPut('musicas', state.stage.song);
+        } catch (err) {
+          console.error('Erro ao salvar preferências:', err);
+        }
+      }, 350);
+    }
+
+    // =========================================================================
+    // SCREEN WAKE LOCK API
+    // =========================================================================
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          state.stage.wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {
+        // Silencioso caso o navegador/contexto não permita Wake Lock
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (state.stage.wakeLock) {
+        try {
+          await state.stage.wakeLock.release();
+        } catch (e) {}
+        state.stage.wakeLock = null;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.stage.active) {
+        requestWakeLock();
+      }
+    });
+
+    // =========================================================================
+    // CONTROLES DA CIFRA E ATALHOS DE TECLADO / PEDAL BLUETOOTH
+    // =========================================================================
+    document.getElementById('btn-exit-stage').addEventListener('click', closeCifraView);
+    document.getElementById('btn-stage-play').addEventListener('click', toggleAutoScroll);
+
+    document.getElementById('btn-speed-down').addEventListener('click', () => {
+      state.stage.speed = Math.max(0.5, Math.round((state.stage.speed - 0.5) * 10) / 10);
+      document.getElementById('label-speed').textContent = `${state.stage.speed.toFixed(1)}x`;
+      scheduleSaveSongPrefs();
+    });
+
+    document.getElementById('btn-speed-up').addEventListener('click', () => {
+      state.stage.speed = Math.min(10.0, Math.round((state.stage.speed + 0.5) * 10) / 10);
+      document.getElementById('label-speed').textContent = `${state.stage.speed.toFixed(1)}x`;
+      scheduleSaveSongPrefs();
+    });
+
+    document.getElementById('btn-font-down').addEventListener('click', () => {
+      state.stage.fontSize = Math.max(12, state.stage.fontSize - 2);
+      renderTextInStage();
+      scheduleSaveSongPrefs();
+    });
+
+    document.getElementById('btn-font-up').addEventListener('click', () => {
+      state.stage.fontSize = Math.min(36, state.stage.fontSize + 2);
+      renderTextInStage();
+      scheduleSaveSongPrefs();
+    });
+
+    document.getElementById('btn-transpose-down').addEventListener('click', () => {
+      state.stage.transposeSteps = state.stage.transposeSteps <= -11 ? 0 : state.stage.transposeSteps - 1;
+      document.getElementById('label-transpose').textContent =
+        state.stage.transposeSteps > 0 ? `+${state.stage.transposeSteps}` : `${state.stage.transposeSteps}`;
+      updateStageKeyBadge();
+      renderTextInStage();
+    });
+
+    document.getElementById('btn-transpose-up').addEventListener('click', () => {
+      state.stage.transposeSteps = state.stage.transposeSteps >= 11 ? 0 : state.stage.transposeSteps + 1;
+      document.getElementById('label-transpose').textContent =
+        state.stage.transposeSteps > 0 ? `+${state.stage.transposeSteps}` : `${state.stage.transposeSteps}`;
+      updateStageKeyBadge();
+      renderTextInStage();
+    });
+
+    document.getElementById('btn-pdf-invert').addEventListener('click', () => {
+      state.stage.pdfNightMode = !state.stage.pdfNightMode;
+      updatePdfNightModeUI();
+    });
+
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      const el = document.getElementById('stage-view');
+      if (!document.fullscreenElement) {
+        el.requestFullscreen?.().catch(() => {});
+      } else {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    });
+
+    function navigateSetlist(delta) {
+      if (!state.stage.setlist) return;
+      const nextIdx = state.stage.setlistIndex + delta;
+      const ids = state.stage.setlist.musicasIds;
+      if (nextIdx >= 0 && nextIdx < ids.length) {
+        openCifraView(ids[nextIdx], state.stage.setlist.id, nextIdx);
+      }
+    }
+
+    document.getElementById('btn-stage-prev').addEventListener('click', () => navigateSetlist(-1));
+    document.getElementById('btn-stage-next').addEventListener('click', () => navigateSetlist(1));
+
+    // Atalhos de Teclado e Pedal Bluetooth
+    document.addEventListener('keydown', (e) => {
+      // Fecha modal de temas com Esc primeiro
+      const themeModal = document.getElementById('modal-theme');
+      if (e.code === 'Escape' && !themeModal.classList.contains('hidden')) {
+        closeThemeModal();
+        return;
+      }
+
+      if (!state.stage.active) return;
+
+      const stepPx = Math.round(stageScrollEl.clientHeight * 0.45);
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        toggleAutoScroll();
+      } else if (e.code === 'ArrowDown' || e.code === 'PageDown') {
+        e.preventDefault();
+        stageScrollEl.scrollBy({ top: stepPx, behavior: 'smooth' });
+        state.stage.scrollAccumulator = stageScrollEl.scrollTop + stepPx;
+      } else if (e.code === 'ArrowUp' || e.code === 'PageUp') {
+        e.preventDefault();
+        stageScrollEl.scrollBy({ top: -stepPx, behavior: 'smooth' });
+        state.stage.scrollAccumulator = Math.max(0, stageScrollEl.scrollTop - stepPx);
+      } else if (e.code === 'Escape') {
+        e.preventDefault();
+        closeCifraView();
+      }
+    });
+
+    // =========================================================================
+    // BACKUP PORTÁTIL (.JSON COM PDFs EM BASE64)
+    // =========================================================================
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function base64ToBlob(dataUrl) {
+      const res = await fetch(dataUrl);
+      return await res.blob();
+    }
+
+    function openBackupModal() {
+      document.getElementById('modal-backup').classList.remove('hidden');
+    }
+
+    function closeBackupModal() {
+      document.getElementById('modal-backup').classList.add('hidden');
+    }
+
+    document.getElementById('btn-open-backup').addEventListener('click', openBackupModal);
+
+    document.getElementById('btn-export-json').addEventListener('click', async () => {
+      try {
+        const musicas = await dbGetAll('musicas');
+        const setlists = await dbGetAll('setlists');
+
+        const serializedMusicas = [];
+        for (const m of musicas) {
+          const copy = { ...m };
+          if (copy.arquivoPdfBlob instanceof Blob) {
+            copy.arquivoPdfBase64 = await blobToBase64(copy.arquivoPdfBlob);
+          }
+          delete copy.arquivoPdfBlob;
+          serializedMusicas.push(copy);
+        }
+
+        const payload = {
+          app: 'Palco Aberto',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          musicas: serializedMusicas,
+          setlists,
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `palco-aberto-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        closeBackupModal();
+        showToast('Backup exportado com sucesso.');
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao exportar backup.', 'error');
+      }
+    });
+
+    document.getElementById('input-import-json').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (!data || !Array.isArray(data.musicas) || !Array.isArray(data.setlists)) {
+          showToast('Arquivo de backup inválido.', 'error');
+          return;
+        }
+
+        let countSongs = 0;
+        for (const m of data.musicas) {
+          const obj = { ...m };
+          if (obj.arquivoPdfBase64) {
+            obj.arquivoPdfBlob = await base64ToBlob(obj.arquivoPdfBase64);
+            delete obj.arquivoPdfBase64;
+          } else {
+            obj.arquivoPdfBlob = null;
+          }
+          await dbPut('musicas', obj);
+          countSongs++;
+        }
+
+        let countSetlists = 0;
+        for (const sl of data.setlists) {
+          await dbPut('setlists', sl);
+          countSetlists++;
+        }
+
+        await refreshDataFromDB();
+        closeBackupModal();
+        showToast(`Restaurado: ${countSongs} músicas e ${countSetlists} setlists.`);
+      } catch (err) {
+        console.error(err);
+        showToast('Erro ao restaurar backup.', 'error');
+      } finally {
+        e.target.value = '';
+      }
+    });
+
+    // =========================================================================
+    // NAVEGAÇÃO, BUSCA, TOASTS & CONFIRMAÇÃO
+    // =========================================================================
+    function switchMainTab(tab) {
+      state.activeTab = tab;
+      const tabMus = document.getElementById('tab-musicas');
+      const tabSet = document.getElementById('tab-setlists');
+      const viewMus = document.getElementById('view-musicas');
+      const viewSet = document.getElementById('view-setlists');
+
+      if (tab === 'musicas') {
+        tabMus.className = 'flex-1 sm:flex-none px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 t-btn-primary';
+        tabSet.className = 'flex-1 sm:flex-none px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 t-text-sec hover:t-text';
+        viewMus.classList.remove('hidden');
+        viewSet.classList.add('hidden');
+      } else {
+        tabSet.className = 'flex-1 sm:flex-none px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 t-btn-primary';
+        tabMus.className = 'flex-1 sm:flex-none px-5 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 t-text-sec hover:t-text';
+        viewSet.classList.remove('hidden');
+        viewMus.classList.add('hidden');
+      }
+    }
+
+    document.getElementById('tab-musicas').addEventListener('click', () => switchMainTab('musicas'));
+    document.getElementById('tab-setlists').addEventListener('click', () => switchMainTab('setlists'));
+    document.getElementById('btn-new-song').addEventListener('click', () => openSongModal());
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      renderMusicas();
+    });
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const extraClass = type === 'error'
+        ? 'bg-red-950 border-red-800 text-red-100'
+        : 't-surface t-border t-text';
+
+      toast.className = `pointer-events-auto px-4 py-3 rounded-2xl border shadow-xl text-sm font-medium transition-all duration-300 ${extraClass}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 2800);
+    }
+
+    function showConfirmModal(title, message, onConfirm) {
+      const modal = document.getElementById('modal-confirm');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      modal.classList.remove('hidden');
+
+      const btnOk = document.getElementById('confirm-ok');
+      const btnCancel = document.getElementById('confirm-cancel');
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        btnOk.replaceWith(btnOk.cloneNode(true));
+        btnCancel.replaceWith(btnCancel.cloneNode(true));
+      };
+
+      document.getElementById('confirm-cancel').addEventListener('click', cleanup);
+      document.getElementById('confirm-ok').addEventListener('click', async () => {
+        cleanup();
+        await onConfirm();
+      });
+    }
+
+    // Fecha modais ao clicar no fundo escuro (backdrop)
+    ['modal-theme', 'modal-song', 'modal-add-to-setlist', 'modal-backup'].forEach((modalId) => {
+      document.getElementById(modalId).addEventListener('click', (e) => {
+        if (e.target.id === modalId) {
+          e.target.classList.add('hidden');
+        }
+      });
+    });
+
+    // =========================================================================
+    // INICIALIZAÇÃO
+    // =========================================================================
+    (async function bootstrap() {
+      loadAppearancePrefs();
+      try {
+        await initDB();
+        await checkStoragePersistence();
+        await seedInitialDataIfEmpty();
+        await refreshDataFromDB();
+      } catch (err) {
+        console.error('Erro na inicialização:', err);
+        showToast('Erro ao iniciar banco de dados local.', 'error');
+      }
+    })();
+  </script>
+</body>
+</html>
